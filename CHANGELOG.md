@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed`
 
 - [#182](https://github.com/IntGenomicsLab/lrsomatic/pull/182) - Added `--vcf` to the default `vep_args` so VEP writes VCF output rather than its default tab-delimited format (@AmberVerhasselt).
+- [#191](https://github.com/IntGenomicsLab/lrsomatic/pull/191) - Fixed Clair3 model download staging so an explicit `clair3_model` override works when the auto-detected basecall model is missing or not in the model map (@YannVRB).
 
 ## v1.1.0 - [2026-04-28]
 
