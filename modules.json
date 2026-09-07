@@ -163,6 +163,29 @@
                         "installed_by": ["bam_stats_samtools"],
                         "patch": "modules/nf-core/samtools/stats/samtools-stats.diff"
                     },
+                    "savana/classify": {
+                        "branch": "master",
+                        "git_sha": "7e612460bcb5aaf9c6f146cfb6475064c2d062ee",
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/savana/classify/savana-classify.diff"
+                    },
+                    "savana/cna": {
+                        "branch": "master",
+                        "git_sha": "cc9117a41906d96832594d98f23da7805a87eca2",
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/savana/cna/savana-cna.diff"
+                    },
+                    "savana/run": {
+                        "branch": "master",
+                        "git_sha": "8226aa5748298be6c00661fe611e231c64f88e71",
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/savana/run/savana-run.diff"
+                    },
+                    "savana/to": {
+                        "branch": "master",
+                        "git_sha": "ad25ca6c4d27f57740e739886000439d8dff2061",
+                        "installed_by": ["modules"]
+                    },
                     "severus": {
                         "branch": "master",
                         "git_sha": "4dd9d8439a429c7ee566e0e2347f76ddeef27e66",

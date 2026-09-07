@@ -1,0 +1,38 @@
+nextflow_pipeline {
+
+    name "Test pipeline - CHM13 reference genome"
+    script "../main.nf"
+    tag "pipeline"
+    tag "extended"
+
+    test("-profile test_chm13") {
+
+        options "-profile test_chm13"
+
+        when {
+            params {
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success},
+                { //files exist
+                    assert file("$outputDir/sample1/variants/clair3/merge_output.vcf.gz").exists()
+                    assert file("$outputDir/sample1/variants/clairs/indel.vcf.gz").exists()
+                    assert file("$outputDir/sample1/variants/severus/somatic_SVs/severus_somatic.vcf.gz").exists()
+                    assert file("$outputDir/sample1/variants/savana/sample1.classified.somatic.vcf").exists()
+                    assert file("$outputDir/sample2/variants/clair3/merge_output.vcf.gz").exists()
+                    assert file("$outputDir/sample2/variants/clairs/indel.vcf.gz").exists()
+                    assert file("$outputDir/sample2/variants/severus/somatic_SVs/severus_somatic.vcf.gz").exists()
+                    assert file("$outputDir/sample2/variants/savana/sample2.classified.somatic.vcf").exists()
+                    assert file("$outputDir/sample3/variants/clairsto/somatic.vcf.gz").exists()
+                    // sample3 (tumor-only) SAVANA output isn't asserted: `savana to` bundles CNA
+                    // internally, and errorStrategy='ignore' on its CNA sparsity failures can
+                    // discard the whole process's output, not just the CNA files (see PR description).
+                }
+            )
+        }
+    }
+}

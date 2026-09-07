@@ -339,6 +339,51 @@ Present in **tumor-only** samples (no matched normal).
 | `read_qual.txt`                           | file containing quality statistics about identified segements                     |
 | `severus.log`                             | log file                                                                          |
 
+#### `savana`
+
+SAVANA structural variant and copy-number calling. Runs alongside Severus/ASCAT rather than replacing
+either. Matched tumor/normal samples run `savana run` + `savana classify` + `savana cna` as separate
+steps; tumor-only samples run the combined `savana to` command instead, producing the same file set
+in one step. We strongly recommend matched tumor/normal mode for best performance -- SAVANA's own
+docs note tumor-only calling is a fallback, best combined with population/panel-of-normals filtering.
+
+```
+├── savana
+│   ├── sample.sv_breakpoints.vcf
+│   ├── sample.sv_breakpoints.bedpe
+│   ├── sample.sv_breakpoints_read_support.tsv
+│   ├── sample.inserted_sequences.fa
+│   ├── sample.classified.vcf
+│   ├── sample.classified.somatic.vcf
+│   ├── sample.classified.somatic.bedpe
+│   ├── sample.classified.germline.vcf
+│   ├── sample_segmented_absolute_copy_number.tsv
+│   ├── sample_ranked_solutions.tsv
+│   ├── sample_fitted_purity_ploidy.tsv
+│   ├── sample_raw_read_counts.tsv
+│   ├── sample_read_counts_<mode>_log2r_segmented.tsv
+│   ├── sample_allele_counts_hetSNPs.bed
+│   ├── 10kbp_bin_ref_all_sample.bed
+```
+
+| File                                          | Description                                                                     |
+| ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| `sample.sv_breakpoints.vcf`                    | Raw (unclassified) SV breakpoints from `savana run`/`savana to`                  |
+| `sample.sv_breakpoints.bedpe`                  | Raw SV breakpoints in BEDPE format                                               |
+| `sample.sv_breakpoints_read_support.tsv`       | Supporting-read evidence per breakpoint                                          |
+| `sample.inserted_sequences.fa`                 | Inserted sequences at breakpoints (insertion SVs)                                |
+| `sample.classified.vcf`                        | All breakpoints after `savana classify` (somatic + germline)                     |
+| `sample.classified.somatic.vcf`                | Classified somatic SV VCF -- fed into VEP for annotation                         |
+| `sample.classified.somatic.bedpe`              | Classified somatic SVs in BEDPE format                                           |
+| `sample.classified.germline.vcf`               | Classified germline SVs                                                          |
+| `sample_segmented_absolute_copy_number.tsv`    | Segmented absolute copy-number calls from `savana cna`/`savana to`               |
+| `sample_ranked_solutions.tsv`                  | Candidate purity/ploidy solutions, ranked                                        |
+| `sample_fitted_purity_ploidy.tsv`              | Selected purity/ploidy fit                                                       |
+| `sample_raw_read_counts.tsv`                   | Raw binned read counts used for CN segmentation                                  |
+| `sample_read_counts_<mode>_log2r_segmented.tsv`| Segmented log2 read-count ratios per bin (`<mode>` is `mnorm` or `self`)          |
+| `sample_allele_counts_hetSNPs.bed`             | Heterozygous-SNP allele counts (only when SNP/allele-frequency input is given)    |
+| `10kbp_bin_ref_all_sample.bed`                 | Genome bins used for read-count binning                                          |
+
 #### `deepvariant`
 
 DeepVariant germline small variant calls. Present in all samples.

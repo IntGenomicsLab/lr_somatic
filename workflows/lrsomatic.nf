@@ -33,6 +33,7 @@ include { FIBERTOOLSRS_QC                   } from '../modules/local/fibertoolsr
 include { ENSEMBLVEP_VEP as SOMATIC_VEP     } from '../modules/nf-core/ensemblvep/vep/main.nf'
 include { ENSEMBLVEP_VEP as GERMLINE_VEP    } from '../modules/nf-core/ensemblvep/vep/main.nf'
 include { ENSEMBLVEP_VEP as SV_VEP          } from '../modules/nf-core/ensemblvep/vep/main.nf'
+include { ENSEMBLVEP_VEP as VEP_SAVANA      } from '../modules/nf-core/ensemblvep/vep/main.nf'
 include { WHATSHAP_STATS                    } from '../modules/nf-core/whatshap/stats/main'
 include { MODKIT_PILEUP                     } from '../modules/nf-core/modkit/pileup/main'
 
@@ -46,6 +47,8 @@ include { TUMORONLY_SMALLVAR              } from '../subworkflows/local/tumor_on
 include { PAIRED_SMALLVAR_SOMATIC         } from '../subworkflows/local/paired/paired_smallvar_somatic'
 include { PAIRED_SMALLVAR_GERMLINE        } from '../subworkflows/local/paired/paired_smallvar_germline'
 include { PHASING_HAPLOTYPING             } from '../subworkflows/local/phasing_haplotyping'
+include { TUMORONLY_SAVANA                } from '../subworkflows/local/tumor_only/tumoronly_savana'
+include { PAIRED_SAVANA                   } from '../subworkflows/local/paired/paired_savana'
 
 
 
@@ -95,6 +98,8 @@ workflow LRSOMATIC {
     params.centromere_bed = getGenomeAttribute('centromere_bed')
     params.pon_file = getGenomeAttribute('pon_file')
     params.bed_file = getGenomeAttribute('bed_file')
+    params.savana_contigs = getGenomeAttribute('savana_contigs')
+    params.savana_g1000_vcf = getGenomeAttribute('savana_g1000_vcf')
     params.vep_genome = getGenomeAttribute('vep_genome')
     params.vep_species = getGenomeAttribute('vep_species')
 
@@ -939,6 +944,127 @@ workflow LRSOMATIC {
         )
 
         ch_versions = ch_versions.mix(ASCAT.out.versions)
+    }
+
+    //
+    // SUBWORKFLOWS: TUMORONLY_SAVANA / PAIRED_SAVANA (SAVANA SV + copy-number calling)
+    // Tumor-only runs the combined `savana to`; matched tumor/normal runs `savana run` +
+    // `savana classify` + `savana cna` as separate steps (mirrors Severus/small-variant split).
+    // CN calls are auto-published per-process (conf/modules.config); somatic_vcf is fed into
+    // SV_VEP below, alongside Severus's SVs.
+    //
+
+    savana_somatic_vcf = channel.empty()
+
+    if (!params.skip_savana) {
+        // SAVANA reads the HP (haplotype) tag per read and its README recommends phased BAMs,
+        // so build its input from PHASING_HAPLOTYPING's haplotagged BAMs rather than the
+        // unphased ones severus_input carries.
+        def savana_meta_keys = ['id', 'paired_data', 'platform', 'sex', 'fiber',
+            'clair3_model', 'clairS_model', 'clairSTO_model', 'kinetics']
+
+        PHASING_HAPLOTYPING.out.tumor_normal_hapbams_ch
+            .branch { meta, _bam, _bai ->
+                tumor_only:    !meta.paired_data
+                paired_tumor:  meta.paired_data && meta.type == 'tumor'
+                paired_normal: meta.paired_data && meta.type == 'normal'
+            }
+            .set { branched_savana_hapbams }
+
+        branched_savana_hapbams.tumor_only
+            .map { meta, bam, bai ->
+                def normal_bam = []
+                def normal_bai = []
+                return [meta.subMap(savana_meta_keys), bam, bai, normal_bam, normal_bai]
+            }
+            .set { savana_tumoronly_hapbams }
+
+        branched_savana_hapbams.paired_tumor
+            .map { meta, bam, bai -> return [meta.subMap(savana_meta_keys), bam, bai] }
+            .set { savana_paired_tumor_hapbams }
+
+        branched_savana_hapbams.paired_normal
+            .map { meta, bam, bai -> return [meta.subMap(savana_meta_keys), bam, bai] }
+            .set { savana_paired_normal_hapbams }
+
+        savana_paired_tumor_hapbams
+            .join(savana_paired_normal_hapbams)
+            .set { savana_paired_hapbams }
+        // savana_paired_hapbams: [meta, tumor_bam, tumor_bai, normal_bam, normal_bai]
+
+        savana_tumoronly_hapbams
+            .mix(savana_paired_hapbams)
+            .join(PHASING_HAPLOTYPING.out.phased_germline_vcf)
+            .set { savana_input }
+        // savana_input: [meta, tumor_bam, tumor_bai, normal_bam, normal_bai, phased_germline_vcf, phased_germline_tbi]
+        //   normal_bam/bai are [] for tumor-only samples
+
+        savana_input
+            .branch { meta, _tumor_bam, _tumor_bai, normal_bam, _normal_bai, _phased_vcf, _phased_tbi ->
+                tumor_only: !normal_bam
+                paired: normal_bam
+            }
+            .set { branched_savana_input }
+        // branched_savana_input.tumor_only / .paired: same 7-tuple shape as savana_input
+
+        branched_savana_input.tumor_only
+            .map { meta, tumor_bam, tumor_bai, _normal_bam, _normal_bai, phased_vcf, phased_tbi ->
+                return [meta, tumor_bam, tumor_bai, phased_vcf, phased_tbi]
+            }
+            .set { tumoronly_savana_input }
+        // tumoronly_savana_input: [meta, tumor_bam, tumor_bai, phased_vcf, phased_tbi]
+
+        ch_savana_contigs = channel.value([[:], params.savana_contigs])
+        // Tumor-only has no matched germline control, so allele counting uses the bundled 1000g
+        // population SNP set instead of a (nonexistent) germline VCF -- see TUMORONLY_SAVANA.
+        ch_savana_g1000_vcf = channel.value([[:], params.savana_g1000_vcf])
+
+        TUMORONLY_SAVANA (
+            tumoronly_savana_input,
+            ch_fasta,
+            ch_fai,
+            ch_savana_contigs,
+            ch_savana_g1000_vcf
+        )
+
+        PAIRED_SAVANA (
+            branched_savana_input.paired,
+            ch_fasta,
+            ch_fai,
+            ch_savana_contigs
+        )
+
+        TUMORONLY_SAVANA.out.somatic_vcf
+            .mix(PAIRED_SAVANA.out.somatic_vcf)
+            .set { savana_somatic_vcf }
+        // savana_somatic_vcf: [meta, vcf]
+
+        if (!params.skip_vep) {
+            //
+            // MODULE: VEP_SAVANA (ENSEMBLVEP_VEP alias; label: process_medium)
+            // Input:  savana_somatic_vcf -- [meta, vcf, []]  -- SAVANA classified somatic SV VCF
+            // Output: annotated SV VCF with consequence predictions
+            //
+            savana_somatic_vcf
+                .map { meta, vcf ->
+                    def extra = []
+                    return [meta, vcf, extra]
+                }
+                .set { savana_vep }
+            // savana_vep: [meta, savana_somatic_vcf, []]  -- SAVANA SVs ready for VEP annotation
+
+            VEP_SAVANA (
+                savana_vep,
+                params.vep_genome,
+                params.vep_species,
+                params.vep_cache_version,
+                vep_cache,
+                ch_fasta,
+                [],
+                vep_custom,
+                vep_custom_tbi
+            )
+        }
     }
 
     //

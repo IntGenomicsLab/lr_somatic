@@ -230,6 +230,23 @@
                 }
             }
         },
+        "savana_options": {
+            "title": "Savana options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "savana_pb_minsupport": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Minimum supporting reads for SAVANA to call a variant on PacBio samples (--min_support with --pb). SAVANA's own testing found 10 outperforms its default of 5 on PacBio data."
+                },
+                "savana_chromosomes": {
+                    "type": "string",
+                    "description": "Restrict `savana to`'s allele counting to specific chromosome numbers (SAVANA's -c/--chromosomes), e.g. '19'. Intended for test profiles running on partial references."
+                }
+            }
+        },
         "ascat_parameters": {
             "title": "ASCAT parameters",
             "type": "object",
@@ -336,6 +353,10 @@
                 "skip_ascat": {
                     "type": "boolean",
                     "description": "Skip ASCAT"
+                },
+                "skip_savana": {
+                    "type": "boolean",
+                    "description": "Skip SAVANA (SV + copy-number calling)"
                 },
                 "skip_m6a": {
                     "type": "boolean",
@@ -545,6 +566,9 @@
         },
         {
             "$ref": "#/$defs/severus_options"
+        },
+        {
+            "$ref": "#/$defs/savana_options"
         },
         {
             "$ref": "#/$defs/ascat_parameters"

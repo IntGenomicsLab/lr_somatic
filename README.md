@@ -56,7 +56,9 @@ b. Phasing and Haplotagging germline SNPs in tumour BAM ([`LongPhase`](https://g
 
 a. Somatic structural variant calling ([`Severus`](https://github.com/KolmogorovLab/Severus))
 
-b. Copy number alterion calling; long read version of ([`ASCAT`](https://github.com/VanLoo-lab/ascat))
+b. Somatic structural variant and copy-number calling ([`SAVANA`](https://github.com/cortes-ciriano-lab/savana))
+
+c. Copy number alterion calling; long read version of ([`ASCAT`](https://github.com/VanLoo-lab/ascat))
 
 **4) Annotation:**
 
@@ -106,7 +108,7 @@ IntGenomicsLab/lr_somatic was originally written by Luuk Harbers, Robert Forsyth
 
 This pipeline produces a series of different output files. The main output is an aligned and phased tumour bam file. This bam file can be used by any typical downstream tool that uses bam files as input. Furthermore, we have sample-specific QC outputs from `cramino` (fastq), `cramino` (bam), `mosdepth`, `samtools` (stats/flagstat/idxstats), and optionally `fibertools`. Finally, we have a `multiqc` report from that combines the output from `mosdepth` and `samtools` into one html report.
 
-Besides QC and the aligned and phased bam file, we have output from (structural) variant and copy number callers, of which some are optional. The output from these variant callers can be found in their respective folders. For small and structural variant callers (`clairS`, `clairS-TO`, and `severus`) these will contain, among others, `vcf` files with called variants. For `ascat` these contain files with final copy number information and plots of the copy number profiles.
+Besides QC and the aligned and phased bam file, we have output from (structural) variant and copy number callers, of which some are optional. The output from these variant callers can be found in their respective folders. For small and structural variant callers (`clairS`, `clairS-TO`, `severus`, and `savana`) these will contain, among others, `vcf` files with called variants. For `ascat` and `savana` these also contain files with copy number information.
 
 Example output directory structure:
 
@@ -124,6 +126,7 @@ Example output directory structure:
 │    ├── variants
 │    │   ├──clairS-TO
 │    │   ├──severus
+│    │   ├──savana
 │    ├── vep
 │    │   ├── germline
 │    │   ├── somatic
@@ -149,6 +152,7 @@ Example output directory structure:
 │    │   ├── clair3
 │    │   ├── clairS
 │    │   ├── severus
+│    │   ├── savana
 │    ├── vep
 │    │   ├── germline
 │    │   ├── somatic

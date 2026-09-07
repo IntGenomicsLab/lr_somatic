@@ -76,6 +76,12 @@
                 "SAMTOOLS_STATS": {
                     "samtools": "1.22.1"
                 },
+                "SAVANA_CLASSIFY": {
+                    "savana": "1.3.8"
+                },
+                "SAVANA_RUN": {
+                    "savana": "1.3.8"
+                },
                 "SEVERUS": {
                     "severus": 1.6
                 },
@@ -97,6 +103,11 @@
                 },
                 "VCFSPLIT": {
                     "bcftools": 1.2
+                },
+                "VEP_SAVANA": {
+                    "ensemblvep": 115.2,
+                    "perl-math-cdf": 0.1,
+                    "tabix": 1.21
                 },
                 "WGET": {
                     "wget": "1.21.4"
@@ -281,6 +292,14 @@
                 "sample1/variants/phased/germline_smallvariants_mod.vcf.gz.tbi",
                 "sample1/variants/phased/somatic_smallvariants.vcf.gz",
                 "sample1/variants/phased/somatic_smallvariants.vcf.gz.tbi",
+                "sample1/variants/savana",
+                "sample1/variants/savana/sample1.classified.somatic.bedpe",
+                "sample1/variants/savana/sample1.classified.somatic.vcf",
+                "sample1/variants/savana/sample1.classified.vcf",
+                "sample1/variants/savana/sample1.inserted_sequences.fa",
+                "sample1/variants/savana/sample1.sv_breakpoints.bedpe",
+                "sample1/variants/savana/sample1.sv_breakpoints.vcf",
+                "sample1/variants/savana/sample1.sv_breakpoints_read_support.tsv",
                 "sample1/variants/severus",
                 "sample1/variants/severus/all_SVs",
                 "sample1/variants/severus/all_SVs/breakpoint_clusters.tsv",
@@ -299,6 +318,9 @@
                 "sample1/vep/SVs/sample1_SV_VEP.vcf.gz",
                 "sample1/vep/SVs/sample1_SV_VEP.vcf.gz.tbi",
                 "sample1/vep/SVs/sample1_SV_VEP.vcf.gz_summary.html",
+                "sample1/vep/SVs/sample1_VEP_SAVANA.vcf.gz",
+                "sample1/vep/SVs/sample1_VEP_SAVANA.vcf.gz.tbi",
+                "sample1/vep/SVs/sample1_VEP_SAVANA.vcf.gz_summary.html",
                 "sample1/vep/germline",
                 "sample1/vep/germline/sample1_GERMLINE_VEP.vcf.gz",
                 "sample1/vep/germline/sample1_GERMLINE_VEP.vcf.gz.tbi",
@@ -396,6 +418,13 @@
                 "sample2/variants/phased/germline_smallvariants_mod.vcf.gz.tbi",
                 "sample2/variants/phased/somatic_smallvariants.vcf.gz",
                 "sample2/variants/phased/somatic_smallvariants.vcf.gz.tbi",
+                "sample2/variants/savana",
+                "sample2/variants/savana/sample2.classified.somatic.vcf",
+                "sample2/variants/savana/sample2.classified.vcf",
+                "sample2/variants/savana/sample2.inserted_sequences.fa",
+                "sample2/variants/savana/sample2.sv_breakpoints.bedpe",
+                "sample2/variants/savana/sample2.sv_breakpoints.vcf",
+                "sample2/variants/savana/sample2.sv_breakpoints_read_support.tsv",
                 "sample2/variants/severus",
                 "sample2/variants/severus/all_SVs",
                 "sample2/variants/severus/all_SVs/breakpoint_clusters.tsv",
@@ -414,6 +443,9 @@
                 "sample2/vep/SVs/sample2_SV_VEP.vcf.gz",
                 "sample2/vep/SVs/sample2_SV_VEP.vcf.gz.tbi",
                 "sample2/vep/SVs/sample2_SV_VEP.vcf.gz_summary.html",
+                "sample2/vep/SVs/sample2_VEP_SAVANA.vcf.gz",
+                "sample2/vep/SVs/sample2_VEP_SAVANA.vcf.gz.tbi",
+                "sample2/vep/SVs/sample2_VEP_SAVANA.vcf.gz_summary.html",
                 "sample2/vep/germline",
                 "sample2/vep/germline/sample2_GERMLINE_VEP.vcf.gz",
                 "sample2/vep/germline/sample2_GERMLINE_VEP.vcf.gz.tbi",
@@ -562,9 +594,9 @@
             ]
         ],
         "meta": {
-            "nf-test": "0.9.3",
-            "nextflow": "26.04.1"
+            "nf-test": "0.9.0",
+            "nextflow": "26.04.6"
         },
-        "timestamp": "2026-06-01T15:01:21.469856129"
+        "timestamp": "2026-09-03T10:37:00.483784666"
     }
 }

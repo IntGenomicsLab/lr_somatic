@@ -1,0 +1,20 @@
+Changes in module 'nf-core/savana/cna'
+--- modules/nf-core/savana/cna/main.nf
++++ modules/nf-core/savana/cna/main.nf
+@@ -39,14 +39,12 @@
+             ? "--g1000_vcf ${g1000_vcf}"
+             : allele_counts_het_snps ? "--allele_counts_het_snps ${allele_counts_het_snps}" : ""
+     def blacklist_arg = blacklist ? "--blacklist ${blacklist}" : ""
+-    def ref_index_arg = ref_index ? "--ref_index ${ref_index}" : ""
+     def breakpoints_arg = breakpoints ? "--breakpoints ${breakpoints}" : ""
+     """
+     savana cna \\
+       --tumour ${tumour} \\
+       ${normal_arg} \\
+       --ref ${ref} \\
+-      ${ref_index_arg} \\
+       --outdir "./outdir" \\
+       --sample ${prefix} \\
+       --cna_threads ${task.cpus} \\
+
+************************************************************

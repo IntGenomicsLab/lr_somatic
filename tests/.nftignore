@@ -27,3 +27,4 @@ pipeline_info/*.{html,json,txt,yml}
 */qc/{tumor,normal}/mosdepth/*.txt
 */variants/deepsomatic/*.{vcf.gz,vcf.gz.tbi}
 */variants/deepvariant/*.{vcf.gz,vcf.gz.tbi}
+*/variants/savana/*

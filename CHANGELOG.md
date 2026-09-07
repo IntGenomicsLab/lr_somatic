@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v1.2.0dev
 
+### `Added`
+
+- [#189](https://github.com/IntGenomicsLab/lrsomatic/pull/189) - Added SAVANA structural variant and copy-number calling, running alongside Severus/ASCAT (@yannvrb).
+
 ### `Changed`
 
 - [#184](https://github.com/IntGenomicsLab/lrsomatic/pull/184) - Replaced the CHM13 Severus panel of normals with the merged 1000 Genomes + ASAP panel (@AmberVerhasselt).

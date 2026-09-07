@@ -74,6 +74,10 @@
 
   > Keskus, A.G., Bryant, A., Ahmad, T. et al. Severus detects somatic structural variation and complex rearrangements in cancer genomes using long-read sequencing. Nat Biotechnol (2025). https://doi.org/10.1038/s41587-025-02618-8
 
+- [SAVANA](https://www.nature.com/articles/s41592-025-02708-0)
+
+  > Elrick, H. et al. SAVANA: reliable analysis of somatic structural variants and copy number aberrations using long-read sequencing. Nat Methods (2025). https://doi.org/10.1038/s41592-025-02708-0
+
 - [Wakhan](https://github.com/KolmogorovLab/Wakhan)
 
   > A tool to analyze haplotype-specific chromosome-scale somatic copy number aberrations and aneuploidy using long reads (Oxford Nanopore, PacBio). https://github.com/KolmogorovLab/Wakhan
