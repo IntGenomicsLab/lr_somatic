@@ -36,6 +36,9 @@ process WAKHAN {
     tuple val(meta), path("phasing_output/*rephased.vcf.gz.csi")                , emit: rephased_vcf_index
     tuple val(meta), path("snps_loh_plots/*_genome_snps_ratio_loh.html")        , emit: snps_loh_plot,      optional: true
     tuple val(meta), path("solutions_ranks.tsv")                                , emit: solutions_ranks
+    // Whole directories, not the plots inside: every solution's plot has the same basename,
+    // and LRSOMATICREPORT resolves them by solution_<rank>/ path
+    tuple val(meta), path("solution_*", type: 'dir')                            , emit: solution_dirs,   optional: true
     // WARN: Manually update version information as tool does not provide on CLI
     tuple val("${task.process}"), val('wakhan'), val("0.4.3"), topic: versions, emit: versions_wakhan
 

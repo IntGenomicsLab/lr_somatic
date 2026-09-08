@@ -5,8 +5,8 @@
 [![GitHub Actions Linting Status](https://github.com/IntGenomicsLab/lrsomatic/actions/workflows/linting.yml/badge.svg)](https://github.com/IntGenomicsLab/lrsomatic/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.17751829-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.17751829)
 [![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)
 
-[![Nextflow](https://img.shields.io/badge/version-%E2%89%A525.04.0-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
-[![nf-core template version](https://img.shields.io/badge/nf--core_template-4.0.2-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/4.0.2)
+[![Nextflow](https://img.shields.io/badge/version-%E2%89%A525.10.4-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
+[![nf-core template version](https://img.shields.io/badge/nf--core_template-4.1.0-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/4.1.0)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
@@ -100,11 +100,11 @@ More detail is given in our [usage documentation](/docs/usage.md)
 
 ## Credits
 
-IntGenomicsLab/lr_somatic was originally written by Luuk Harbers, Robert Forsyth, Alexandra Pančíková, Marios Eftychiou, Ruben Cools, Laurens Lambrechts, and Jonas Demeulemeester.
+IntGenomicsLab/lr_somatic was originally written by Luuk Harbers, Robert Forsyth, Amber Verhasselt, Alexandra Pančíková, Marios Eftychiou, Ruben Cools, Laurens Lambrechts, and Jonas Demeulemeester.
 
 ## Pipeline output
 
-This pipeline produces a series of different output files. The main output is an aligned and phased tumour bam file. This bam file can be used by any typical downstream tool that uses bam files as input. Furthermore, we have sample-specific QC outputs from `cramino` (fastq), `cramino` (bam), `mosdepth`, `samtools` (stats/flagstat/idxstats), and optionally `fibertools`. Finally, we have a `multiqc` report from that combines the output from `mosdepth` and `samtools` into one html report.
+This pipeline produces a series of different output files. The main output is an aligned and phased tumour bam file. This bam file can be used by any typical downstream tool that uses bam files as input. Furthermore, we have sample-specific QC outputs from `cramino` (fastq), `cramino` (bam), `mosdepth`, `samtools` (stats/flagstat/idxstats), and optionally `fibertools`. Finally, we have a `multiqc` report that combines the output from `mosdepth` and `samtools` into one HTML report, and a self-contained per-sample HTML report (`<sample>/report/<sample>_report.html`) covering small variants, structural variants, copy number and QC in one place — disable it with `--skip_report`.
 
 Besides QC and the aligned and phased bam file, we have output from (structural) variant and copy number callers, of which some are optional. The output from these variant callers can be found in their respective folders. For small and structural variant callers (`clairS`, `clairS-TO`, and `severus`) these will contain, among others, `vcf` files with called variants. For `ascat` these contain files with final copy number information and plots of the copy number profiles.
 
@@ -128,6 +128,7 @@ Example output directory structure:
 │    │   ├── germline
 │    │   ├── somatic
 │    │   ├── SVs
+│    ├── report
 │
 ├── Sample 2
 │    ├── ascat

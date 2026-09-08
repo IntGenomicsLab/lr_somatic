@@ -27,3 +27,7 @@ pipeline_info/*.{html,json,txt,yml}
 */qc/{tumor,normal}/mosdepth/*.txt
 */variants/deepsomatic/*.{vcf.gz,vcf.gz.tbi}
 */variants/deepvariant/*.{vcf.gz,vcf.gz.tbi}
+*/report/*.html
+# samtools merge gives sample4's colliding @PG IDs a random suffix, so this BAM's md5 differs every run (reads asserted in tests/clair_only.nf.test)
+sample4/bamfiles/sample4_tumor.bam
+sample4/bamfiles/sample4_tumor.bam.bai

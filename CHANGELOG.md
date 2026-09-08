@@ -3,12 +3,33 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v1.2.0dev
+
+### `Added`
+
+- [#176](https://github.com/IntGenomicsLab/lrsomatic/pull/176) - Added `LRSOMATICREPORT` as the final pipeline step: a self-contained per-sample HTML report covering small variants, structural variants, copy number and QC. Skip it with `--skip_report`; choose the gene panel selected on load with `--report_gene_panel` (@ljwharbers).
+- [#176](https://github.com/IntGenomicsLab/lrsomatic/pull/176) - Vendored the [lrsomatic_report](https://github.com/ljwharbers/lrsomatic_report) v1.3.2 tool source at `assets/lrsomatic_report`, so `nextflow run IntGenomicsLab/lrsomatic` ships it without a submodule checkout (@ljwharbers).
+- [#176](https://github.com/IntGenomicsLab/lrsomatic/pull/176) - Added a `solution_dirs` output to the WAKHAN module so its per-solution copy-number plots can be staged downstream (@ljwharbers).
+
+### `Changed`
+
+- [#186](https://github.com/IntGenomicsLab/lrsomatic/pull/186) - Re-synced the vendored [lrsomatic_report](https://github.com/ljwharbers/lrsomatic_report) to v1.3.0, which adds tickbox dropdown filters on the categorical columns of both variant tables and turns the report's gene panel selector into checkboxes (@ljwharbers).
+- [#176](https://github.com/IntGenomicsLab/lrsomatic/pull/176) - Re-synced the vendored [lrsomatic_report](https://github.com/ljwharbers/lrsomatic_report) to v1.3.2: facet dropdown counts follow the active filters, opening a facet menu no longer resets the table's horizontal scroll, a flatter clinical theme, and inline code comments trimmed to one line (@ljwharbers).
+- [#186](https://github.com/IntGenomicsLab/lrsomatic/pull/186) - `--report_gene_panel` now takes a comma-separated list, so several panels can be applied at once: a variant or SV is kept if it hits any of them. Panel values are also validated at launch instead of failing inside the report task (@ljwharbers).
+- [#184](https://github.com/IntGenomicsLab/lrsomatic/pull/184) - Replaced the CHM13 Severus panel of normals with the merged 1000 Genomes + ASAP panel (@AmberVerhasselt).
+- [#183](https://github.com/IntGenomicsLab/lrsomatic/pull/183) - Updated to the nf-core template for [nf-core/tools 4.1.0](https://github.com/nf-core/tools/releases/tag/4.1.0). Adds the `check-added-large-files`, `check-merge-conflict` and `block-pipeline-outdir` pre-commit hooks, a `process_low_memory` resource label, and a split-out `pr-comment.yml` workflow. `conf/igenomes.config` was converted to the template's strict-syntax `params.genomes` map literal, and the MultiQC module was bumped to 1.35 (@ljwharbers).
+- [#183](https://github.com/IntGenomicsLab/lrsomatic/pull/183) - Raised the minimum Nextflow version to `25.10.4`, following the template, and bumped the nf-test CI matrix to match (@ljwharbers).
+- [#183](https://github.com/IntGenomicsLab/lrsomatic/pull/183) - Filled in the `manifest.contributors` `contribution` fields: @ljwharbers and @robert-a-forsyth as author and maintainer, all other contributors as author. Previously empty, which left the RO-Crate metadata without any authors (@ljwharbers).
+- [#183](https://github.com/IntGenomicsLab/lrsomatic/pull/183) - Added @AmberVerhasselt to `manifest.contributors` as a contributor and to the README credits, and expanded @ljwharbers' affiliation to match the other core contributors. RO-Crate metadata updated to match (@ljwharbers).
+- [#183](https://github.com/IntGenomicsLab/lrsomatic/pull/183) - Set @laulambr's affiliation to the same three-part VIB/KU Leuven string as the other core contributors (@ljwharbers).
 
 ### `Fixed`
 
 - [#181](https://github.com/IntGenomicsLab/lrsomatic/pull/181) - NanoPlot pre- and post-alignment statistics now reach MultiQC. `ch_nanoplot_pre_txt` and `ch_nanoplot_post_txt` were declared empty and mixed into the MultiQC inputs, but never assigned from `NANOPLOT_PRE.out.txt` / `NANOPLOT_POST.out.txt`, so the NanoStat section was silently missing from every report (@ljwharbers).
 - [#181](https://github.com/IntGenomicsLab/lrsomatic/pull/181) - `NANOPLOT_PRE` now includes the replicate in its output prefix, so samples with more than one replicate no longer collapse into a single MultiQC sample (@ljwharbers).
+- [#186](https://github.com/IntGenomicsLab/lrsomatic/pull/186) - Stopped snapshotting the md5 of sample4's merged tumour BAM and its index in the `clair_only` nf-test: `samtools merge` gives the colliding `@PG` IDs of the two replicates a random hex suffix, so neither digest is reproducible. The alignment records are, and are now asserted with `bam().getReadsMD5()` instead (@ljwharbers).
+- [#182](https://github.com/IntGenomicsLab/lrsomatic/pull/182) - Added `--vcf` to the default `vep_args` so VEP writes VCF output rather than its default tab-delimited format (@AmberVerhasselt).
+- [#183](https://github.com/IntGenomicsLab/lrsomatic/pull/183) - Corrected the `github` URL for Laurens Lambrechts in `manifest.contributors`, which was a copy of @MariosEft97's, to @laulambr. RO-Crate metadata updated to match (@ljwharbers).
 
 ## v1.1.0 - [2026-04-28]
 

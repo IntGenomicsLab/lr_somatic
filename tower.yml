@@ -1,5 +1,7 @@
 reports:
   multiqc_report.html:
     display: "MultiQC HTML report"
+  "**/report/*_report.html":
+    display: "Per-sample LRSomatic HTML report"
   samplesheet.csv:
     display: "Auto-created samplesheet with collated metadata and FASTQ paths"

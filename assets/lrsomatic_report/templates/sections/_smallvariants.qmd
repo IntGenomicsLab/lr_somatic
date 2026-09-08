@@ -1,0 +1,113 @@
+## Small variants
+
+```{r small-variant-prepare, results='asis'}
+if (!is.null(variant_table) && nrow(variant_table) > 0) {
+  # Format the VAF as a percentage
+  dt_display = copy(variant_table)
+  if ("vaf" %in% names(dt_display)) {
+    dt_display[, vaf := round(vaf * 100, 1)]
+    setnames(dt_display, "vaf", "VAF%")
+  }
+  # The panel filter reads the symbol column by name, not by a hard-coded position.
+  cat("<script>window.SNV_COLS = ", js_col_index_map(names(dt_display)), ";</script>\n",
+      sep = "")
+
+  # Tickbox facet values for the SNV table (see js_facet_defs() in R/utils.R), built from the display frame so names match SNV_COLS; the requested list is published too, since knitr swallows the omission message
+  snv_facet_cols = c("consequence", "impact", "callers")
+  cat("<script>window.SNV_FACET_COLS = ", js_vec(snv_facet_cols), ";</script>\n", sep = "")
+  cat("<script>window.SNV_FACETS = ",
+      js_facet_defs(dt_display,
+                    cols   = snv_facet_cols,
+                    seps   = c(consequence = ",", callers = ","),
+                    levels = list(impact = IMPACT_LEVELS)),
+      ";</script>\n", sep = "")
+}
+```
+
+```{r small-variant-table}
+if (!is.null(variant_table) && nrow(variant_table) > 0) {
+
+  # Flag cells whose VAF/DP/GT/PS came from a consensus winner; styleEqual() needs literal values
+  mc_vals = if ("callers" %in% names(dt_display))
+              unique(grep(",", dt_display$callers, fixed = TRUE, value = TRUE)) else
+              character(0)
+
+  snv_dt = DT::datatable(
+    dt_display,
+    rownames    = FALSE,
+    filter      = "top",
+    elementId   = "snv-table",
+    extensions  = c("Buttons", "Scroller"),
+    options     = list(
+      dom        = "Bfrtip",
+      buttons    = c("copy", "csv"),
+      scrollX    = TRUE,
+      scrollY    = "400px",
+      scroller   = TRUE,
+      deferRender = TRUE,
+      pageLength = 25,
+      columnDefs = list(list(className = "dt-left", targets = "_all")),
+      initComplete = JS("function() { window.snvTableElem = this.api().table().node(); }")
+    )
+  ) |>
+    DT::formatStyle(
+      columns     = "impact",
+      target      = "cell",
+      backgroundColor = DT::styleEqual(
+        c("HIGH",     "MODERATE", "LOW",      "MODIFIER"),
+        c("#f7e3df",  "#f6edd6",  "#e4efe3",  "#f3f1ea")
+      )
+    )
+
+  if (length(mc_vals) > 0) {
+    snv_dt = DT::formatStyle(
+      snv_dt,
+      columns     = "callers",
+      target      = "cell",
+      # Outside the impact palette so two columns do not read as one scale
+      backgroundColor = DT::styleEqual(mc_vals, rep("#e6ecf5", length(mc_vals)))
+    )
+  }
+
+  # Provenance footnote: which VCF supplied VAF/DP/GT/PS, its coverage, and the ambiguous multi-caller rows (n_multi is 0 on the VEP text path)
+  footnote = table_details(
+    summary = "VAF provenance",
+    tags$p(
+      if (!is.null(vaf_prov)) {
+        tagList(
+          "VAF, depth, genotype and phase set are joined from ",
+          lapply(seq_along(vaf_prov$paths), function(i) {
+            tagList(if (i > 1) ", ", tags$code(vaf_prov$paths[i]))
+          }),
+          # Punctuation rides with the preceding element (adjacent tagList members render with a space)
+          if (length(vaf_prov$sources) > 0)
+            paste0(" (", paste(vaf_prov$sources, collapse = ", "), ");") else ";",
+          "the variant set itself comes from the VEP annotation.",
+          # Named only when the VCF held more than one sample
+          if (length(vaf_prov$sample) > 0)
+            sprintf("Read from sample %s.", paste(vaf_prov$sample, collapse = ", ")) else NULL,
+          if (!is.na(n_vaf))
+            sprintf("%s of %s variants carry a VAF.",
+                    format(n_vaf, big.mark = ","),
+                    format(nrow(variant_table), big.mark = ",")) else NULL
+        )
+      } else {
+        "No VAF source VCF was found, so the VAF, depth, genotype and phase set columns are empty."
+      },
+      if (length(mc_vals) > 0) tagList(
+        tags$br(),
+        tags$span(
+          class = "table-footnote__warn",
+          sprintf(paste("%s variants were reported by more than one caller (highlighted).",
+                        "Their VAF, depth, genotype and phase set come from whichever caller",
+                        "won the consensus merge, so those columns need not correspond to the",
+                        "callers column beside them."),
+                  format(n_multi, big.mark = ","))
+        )
+      )
+    )
+  )
+
+  tagList(snv_dt, footnote)
+}
+```

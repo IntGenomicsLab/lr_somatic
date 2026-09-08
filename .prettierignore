@@ -12,3 +12,5 @@ bin/
 ro-crate-metadata.json
 modules/nf-core/
 subworkflows/nf-core/
+# Vendored upstream tool source -- see assets/lrsomatic_report/VENDORED.md
+assets/lrsomatic_report/

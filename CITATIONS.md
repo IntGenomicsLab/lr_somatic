@@ -50,6 +50,10 @@
 
   > Lin JH, Chen LC, Yu SC, Huang YT. LongPhase: an ultra-fast chromosome-scale phasing algorithm for small and large variants. Bioinformatics. 2022 Apr 28;38(9):2452-2455. doi: 10.1093/bioinformatics/btac126. PubMed PMID: 35253834; PubMed Central PMCID: PMC9048675.
 
+- [lrsomatic_report](https://github.com/ljwharbers/lrsomatic_report)
+
+  > Standalone R/Quarto reporting tool that renders the pipeline's final per-sample HTML report. https://github.com/ljwharbers/lrsomatic_report
+
 - [minimap2](https://pubmed.ncbi.nlm.nih.gov/29750242/)
 
   > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PubMed PMID: 29750242; PubMed Central PMCID: PMC6137996.
@@ -107,5 +111,7 @@
 ## Resources
 
 - [ASAP Panel of Normals](https://www.biorxiv.org/content/10.64898/2026.03.15.711881v1)
+
+  Used for the ClairS-TO CHM13 panel of normals, and merged with the 1000 Genomes CHM13 panel to form the SEVERUS structural-variant panel of normals used for `--genome CHM13`.
 
   > Olga M. Sigalova, Alexandra Pančíková, Julie De Man, Koen Theunis, Gert J. Hulselmans, Vasileios Konstantakos, Bram Stuyven, Anton De Brabandere, Jarne Geurts, Antonina Mikorska, Shinjini Mukherjee, Sara Abouelasrar Salama, Katy Vandereyken, Kristofer Davie, Lukas Mahieu, Charles H. Adler, Thomas G. Beach, Geidy E. Serrano, Thierry Voet, Jonas Demeulemeester, Stein Aerts. Modeling cis-regulatory variation in human brain enhancers across a large Parkinson’s Disease cohort bioRxiv 2026.03.15.711881; doi: https://doi.org/10.64898/2026.03.15.711881

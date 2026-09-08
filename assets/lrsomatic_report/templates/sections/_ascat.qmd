@@ -1,0 +1,106 @@
+## Copy number profile
+
+```{r cn-setup}
+has_any_ascat_plot = !is.null(outputs$ascat_plots) &&
+  any(vapply(outputs$ascat_plots, function(x) !is.null(x) && file.exists(x), logical(1)))
+```
+
+```{r cn-outer-tabset-open, results='asis'}
+cat("::: {.panel-tabset}\n\n")
+cat("### ASCAT\n\n")
+```
+
+```{r ascat-unavailable}
+if (!has_any_ascat_plot) {
+  section_notice("No ASCAT plots found for this sample — ASCAT may have failed or was not run.")
+}
+```
+
+```{r ascat-inner-tabset-open, results='asis', eval=has_any_ascat_plot}
+cat("::: {.panel-tabset}\n\n")
+cat("#### Fitted CN profile\n\n")
+```
+
+```{r ascat-profile, eval=has_any_ascat_plot}
+p = embed_png(outputs$ascat_plots$profile, caption = "ASCAT fitted copy-number profile")
+if (!is.null(p)) p else section_notice("Plot not produced — ASCAT may have failed for this sample.")
+```
+
+```{r ascat-inner-rawprofile-header, results='asis', eval=has_any_ascat_plot}
+cat("\n#### Raw logR + BAF\n\n")
+```
+
+```{r ascat-rawprofile, eval=has_any_ascat_plot}
+p = embed_png(outputs$ascat_plots$aspcf, caption = "Raw logR and BAF, segmented (ASPCF)")
+if (!is.null(p)) p else section_notice("Plot not produced — ASCAT may have failed for this sample.")
+```
+
+```{r ascat-inner-sunrise-header, results='asis', eval=has_any_ascat_plot}
+cat("\n#### Sunrise (purity × ploidy)\n\n")
+```
+
+```{r ascat-sunrise, eval=has_any_ascat_plot}
+p = embed_png(outputs$ascat_plots$sunrise, caption = "Sunrise plot: goodness of fit over purity × ploidy")
+if (!is.null(p)) p else section_notice("Plot not produced — ASCAT may have failed for this sample.")
+```
+
+```{r ascat-inner-tabset-close, results='asis', eval=has_any_ascat_plot}
+cat("\n:::\n\n")
+```
+
+```{r ascat-diag-open, results='asis', eval=has_any_ascat_plot}
+cat('::: {.callout-note collapse="true" title="Diagnostic plots"}\n\n')
+```
+
+```{r ascat-diagnostics, eval=has_any_ascat_plot}
+# Each diagnostic is its own captioned figure; a NULL (file absent) simply drops out.
+htmltools::tagList(
+  embed_png(outputs$ascat_plots$before_gc,  max_width = "700px", caption = "Pre-GC correction"),
+  embed_png(outputs$ascat_plots$after_gc,   max_width = "700px", caption = "Post-GC correction"),
+  embed_png(outputs$ascat_plots$tumour_sep, max_width = "700px", caption = "Tumour separation")
+)
+```
+
+```{r ascat-diag-close, results='asis', eval=has_any_ascat_plot}
+cat("\n:::\n\n")
+```
+
+```{r cn-wakhan-tab-header, results='asis'}
+cat("\n### Wakhan\n\n")
+```
+
+```{r wakhan-status}
+if (!outputs$has_wakhan) {
+  section_notice("Wakhan was not run for this sample.")
+} else if (is.null(wakhan_solutions) && is.null(outputs$wakhan_heatmap) && length(wakhan_cn_plots) == 0) {
+  section_notice("Wakhan output directory found, but no recognised solutions table or plots inside it.")
+}
+```
+
+```{r wakhan-solutions-table}
+if (!is.null(wakhan_solutions)) {
+  DT::datatable(
+    wakhan_solutions,
+    rownames = FALSE,
+    options  = list(dom = "t", pageLength = nrow(wakhan_solutions))
+  )
+}
+```
+
+```{r wakhan-heatmap}
+p = embed_html_iframe(outputs$wakhan_heatmap, height = "600px")
+if (!is.null(p)) htmltools::tags$figure(class = "report-figure", p,
+  htmltools::tags$figcaption(class = "report-figure__caption", "Ploidy × purity solutions"))
+```
+
+```{r wakhan-cn-plots-header, results='asis', eval=length(wakhan_cn_plots) > 0}
+cat('\n<p class="report-figure__caption">Genome copy number + breakpoints, one tab per ranked solution</p>\n\n')
+```
+
+```{r wakhan-cn-plots, eval=length(wakhan_cn_plots) > 0}
+render_wakhan_cn_tabs(wakhan_cn_plots)
+```
+
+```{r cn-outer-tabset-close, results='asis'}
+cat("\n:::\n\n")
+```

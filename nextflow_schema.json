@@ -140,7 +140,6 @@
                 },
                 "igenomes_base": {
                     "type": "string",
-                    "format": "directory-path",
                     "description": "The base path to the igenomes reference files",
                     "fa_icon": "fas fa-ban",
                     "hidden": true,
@@ -197,7 +196,7 @@
                     "type": "string",
                     "description": "Additional command line arguments to pass to VEP.",
                     "fa_icon": "fas fa-terminal",
-                    "default": "--everything --filter_common --per_gene --total_length --offline --format vcf"
+                    "default": "--everything --filter_common --per_gene --total_length --offline --format vcf --vcf"
                 },
                 "vep_cache_version": {
                     "type": "integer",
@@ -303,6 +302,22 @@
                 }
             }
         },
+        "report_options": {
+            "title": "Report options",
+            "type": "object",
+            "description": "Options for the final per-sample HTML report",
+            "default": "",
+            "properties": {
+                "report_src": {
+                    "type": "string",
+                    "description": "Override the report tool source tree (bin/, R/, templates/, assets/). Defaults to the copy vendored in this repository; point it at a local checkout of lrsomatic_report to render with an unreleased version of the tool."
+                },
+                "report_gene_panel": {
+                    "type": "string",
+                    "description": "Gene panel(s) applied when the report opens, as a comma-separated list: 'none' for no filtering, builtin panel names (e.g. 'lymphoid'), and/or paths to TSVs with a 'gene' column. Several panels are applied at once and unioned -- a variant or SV is kept if it hits any of them. Every builtin panel is always embedded in the report and panels are checkboxes there, so the reader can retick them without re-rendering; this only sets the initial selection. An entry is read as a panel file if it contains a '/' or ends in '.tsv', and as a builtin panel name otherwise. 'none' cannot be combined with a real panel, and two panel files sharing a base name cannot be combined. Default (unset) is unfiltered."
+                }
+            }
+        },
         "skip_options": {
             "title": "Skip options",
             "type": "object",
@@ -364,6 +379,10 @@
                 "use_gpu": {
                     "type": "boolean",
                     "description": "Use GPU for supported tools (e.g. DeepVariant, DeepSomatic, Clair3)"
+                },
+                "skip_report": {
+                    "type": "boolean",
+                    "description": "Skip the final per-sample HTML report"
                 }
             }
         },
@@ -551,6 +570,9 @@
         },
         {
             "$ref": "#/$defs/wakhan_options"
+        },
+        {
+            "$ref": "#/$defs/report_options"
         },
         {
             "$ref": "#/$defs/skip_options"

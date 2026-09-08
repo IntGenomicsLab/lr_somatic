@@ -1,0 +1,144 @@
+# reference: hg38
+# gene spans from gencode.v46.basic.annotation.gtf.gz
+# coordinates are 1-based inclusive gene spans; only valid for the reference declared above
+gene	chrom	start	end	panel	notes
+CAMTA1	chr1	6785454	7769706	sarcoma	WWTR1-CAMTA1; epithelioid haemangioendothelioma
+SDHB	chr1	17018664	17054151	sarcoma	SDH-deficient GIST and paraganglioma
+PAX7	chr1	18630846	18748866	sarcoma	PAX7-FOXO1; alveolar rhabdomyosarcoma
+MEAF6	chr1	37489993	37514766	sarcoma	MEAF6-PHF1; ossifying fibromyxoid tumour
+JUN	chr1	58776845	58784048	sarcoma	1p32 amplification in DDLPS
+TGFBR3	chr1	91680343	91906335	sarcoma	TGFBR3-OGA lipofibromatosis-like neural tumour
+CSF1	chr1	109910242	109930992	sarcoma	COL6A3-CSF1; tenosynovial giant cell tumour
+NRAS	chr1	114704469	114716771	sarcoma	RAS signalling
+TPM3	chr1	154155308	154194648	sarcoma	TPM3-NTRK1 / ALK fusion partner
+NTRK1	chr1	156815636	156881850	sarcoma	Kinase fusions; infantile fibrosarcoma-like
+SDHC	chr1	161314381	161363206	sarcoma	SDH-deficient GIST; Carney triad
+MDM4	chr1	204516379	204558120	sarcoma	p53 negative regulator; 1q32 amplification
+H3-3A	chr1	226061851	226072019	sarcoma	H3F3A G34W; giant cell tumour of bone
+EPC1	chr10	32267751	32378798	sarcoma	EPC1-PHF1; endometrial stromal sarcoma
+RET	chr10	43077064	43130351	sarcoma	Kinase fusions
+PTEN	chr10	87862638	87971930	sarcoma	PI3K pathway tumour suppressor
+OGA	chr10	101784443	101818465	sarcoma	MGEA5; TGFBR3-OGA lipofibromatosis-like tumour
+FGFR2	chr10	121478332	121598458	sarcoma	RTK fusion and amplification
+DUX4L10	chr10	133743332	133744598	sarcoma	10q26 D4Z4 paralog; CIC-DUX4L partner
+WT1	chr11	32387775	32435564	sarcoma	EWSR1-WT1; desmoplastic small round cell tumour
+CREB3L1	chr11	46277662	46321409	sarcoma	FUS-CREB3L1; low-grade fibromyxoid sarcoma
+SDHAF2	chr11	61430042	61446839	sarcoma	SDH complex assembly; SDH-deficient GIST
+CCND1	chr11	69641156	69654474	sarcoma	Cyclin D1 amplification
+EED	chr11	86201212	86278813	sarcoma	PRC2; MPNST loss
+MAML2	chr11	95976598	96343195	sarcoma	MAML2 fusions
+YAP1	chr11	102110447	102233424	sarcoma	YAP1-TFE3 / YAP1-MRTFB haemangioendothelioma
+POU2AF3	chr11	111298546	111308735	sarcoma	COLCA2; EWSR1-POU2AF3 sarcoma
+SDHD	chr11	112086824	112120016	sarcoma	SDH-deficient GIST and paraganglioma
+KMT2A	chr11	118436456	118526832	sarcoma	MLL; rare sarcoma fusion partner
+FLI1	chr11	128686535	128813267	sarcoma	EWSR1-FLI1; Ewing sarcoma
+CCND2	chr12	4269771	4305353	sarcoma	Cyclin D2 amplification
+ETV6	chr12	11649674	11895377	sarcoma	ETV6-NTRK3; infantile fibrosarcoma
+KRAS	chr12	25205246	25250936	sarcoma	RAS signalling
+KMT2D	chr12	49018975	49060794	sarcoma	Histone methyltransferase; tumour suppressor
+ATF1	chr12	50763710	50821162	sarcoma	EWSR1-ATF1; clear cell sarcoma, AFH
+TFCP2	chr12	51093656	51173135	sarcoma	FUS/EWSR1-TFCP2 epithelioid rhabdomyosarcoma
+NAB2	chr12	57089043	57095476	sarcoma	NAB2-STAT6; solitary fibrous tumour
+STAT6	chr12	57095408	57132139	sarcoma	NAB2-STAT6; solitary fibrous tumour
+GLI1	chr12	57459785	57472268	sarcoma	GLI1-altered soft tissue tumour; 12q13 amplicon
+DDIT3	chr12	57516588	57521737	sarcoma	FUS/EWSR1-DDIT3; myxoid liposarcoma
+CDK4	chr12	57747727	57756013	sarcoma	12q13-14; co-amplified with MDM2 in DDLPS
+HMGA2	chr12	65824460	65966291	sarcoma	12q14-15; lipoma and DDLPS fusions
+MDM2	chr12	68808177	68845544	sarcoma	12q15 amplification; WDLPS/DDLPS hallmark
+BRCA2	chr13	32315086	32400268	sarcoma	Homologous recombination repair
+FOXO1	chr13	40555667	40666641	sarcoma	PAX3/PAX7-FOXO1; alveolar rhabdomyosarcoma
+RB1	chr13	48303744	48599436	sarcoma	Cell cycle; leiomyosarcoma/osteosarcoma
+GPC5	chr13	91398621	92873682	sarcoma	13q31 amplification; rhabdomyosarcoma
+FOS	chr14	75278826	75282230	sarcoma	FOS rearrangement; osteoblastoma, epithelioid haemangioma
+NUTM1	chr15	34343315	34357737	sarcoma	NUTM1 fusions
+TCF12	chr15	56918623	57299281	sarcoma	TCF12 fusions; ossifying fibromyxoid tumour
+NTRK3	chr15	87859751	88256791	sarcoma	ETV6-NTRK3; infantile fibrosarcoma
+MRTFB	chr16	14071319	14266773	sarcoma	MKL2; MRTFB-YAP1 haemangioendothelioma
+PRKCB	chr16	23835983	24220611	sarcoma	PRKC fusion partner
+FUS	chr16	31180138	31196963	sarcoma	FET family; FUS-DDIT3 myxoid liposarcoma
+YWHAE	chr17	1344275	1400222	sarcoma	YWHAE-NUTM2; endometrial stromal sarcoma
+USP6	chr17	5116032	5175034	sarcoma	Aneurysmal bone cyst, nodular fasciitis
+TP53	chr17	7661779	7687546	sarcoma	Li-Fraumeni; osteosarcoma, leiomyosarcoma
+TOP3A	chr17	18271428	18315007	sarcoma	17p11 amplicon
+NF1	chr17	31094927	31382116	sarcoma	MPNST; RAS-MAPK tumour suppressor
+SUZ12	chr17	31937007	32001038	sarcoma	PRC2; JAZF1-SUZ12 ESS, MPNST loss
+TAF15	chr17	35809482	35864615	sarcoma	FET family; Ewing-like sarcoma
+ERBB2	chr17	39687914	39730426	sarcoma	HER2; RTK amplification
+BRCA1	chr17	43044295	43170245	sarcoma	Homologous recombination repair
+ETV4	chr17	43527844	43579620	sarcoma	ETV4 rearrangement
+COL1A1	chr17	50184101	50201632	sarcoma	COL1A1-PDGFB; dermatofibrosarcoma protuberans
+PRKCA	chr17	66302613	66810743	sarcoma	PRKC fusions; chordoid-type tumours
+H3-3B	chr17	75776434	75785893	sarcoma	H3F3B K36M; chondroblastoma
+SS18	chr18	26016253	26091217	sarcoma	SS18-SSX; synovial sarcoma
+SMARCA4	chr19	10960932	11079426	sarcoma	SWI/SNF; SMARCA4-deficient sarcoma
+TPM4	chr19	16067021	16103002	sarcoma	TPM4-ALK fusion partner
+CIC	chr19	42268537	42295797	sarcoma	CIC-DUX4 round cell sarcoma
+FOSB	chr19	45467995	45475179	sarcoma	FOSB rearrangement; pseudomyogenic haemangioendothelioma
+MYCN	chr2	15940550	15947007	sarcoma	Amplification; rhabdomyosarcoma
+NCOA1	chr2	24491254	24770702	sarcoma	PAX3-NCOA1; rhabdomyosarcoma
+ALK	chr2	29192774	29921586	sarcoma	Kinase fusions; inflammatory myofibroblastic tumour
+EML4	chr2	42169353	42332548	sarcoma	Kinase fusion partner (NTRK3/ALK)
+GLI2	chr2	120735623	120992653	sarcoma	Hedgehog pathway effector
+CREB1	chr2	207529737	207605988	sarcoma	EWSR1-CREB1; angiomatoid fibrous histiocytoma
+FN1	chr2	215360440	215436073	sarcoma	FN1 fusions; calcifying aponeurotic fibroma
+FEV	chr2	218981087	218985184	sarcoma	EWSR1-FEV; Ewing sarcoma
+PAX3	chr2	222199887	222298998	sarcoma	PAX3-FOXO1; alveolar rhabdomyosarcoma
+COL6A3	chr2	237324003	237414328	sarcoma	COL6A3-CSF1; tenosynovial giant cell tumour
+ERG	chr21	38380027	38661780	sarcoma	FUS-ERG / EWSR1-ERG; Ewing sarcoma
+SMARCB1	chr22	23786931	23838009	sarcoma	INI1; epithelioid sarcoma, rhabdoid tumour
+EWSR1	chr22	29268009	29300525	sarcoma	FET family; Ewing sarcoma and many other fusions
+NF2	chr22	29603553	29698598	sarcoma	Schwannoma and mesothelioma tumour suppressor
+PATZ1	chr22	31325804	31346346	sarcoma	EWSR1-PATZ1 round cell sarcoma
+PDGFB	chr22	39223359	39244982	sarcoma	COL1A1-PDGFB; dermatofibrosarcoma protuberans
+RAF1	chr3	12582101	12664201	sarcoma	Kinase fusion; MAPK activation
+CTNNB1	chr3	41194741	41260096	sarcoma	Beta-catenin; desmoid fibromatosis
+PRKCD	chr3	53156009	53192717	sarcoma	PRKC fusion partner
+VGLL3	chr3	86876388	86991149	sarcoma	3p12 amplification
+TFG	chr3	100709295	100748964	sarcoma	Kinase fusion partner (NTRK1/ROS1/ALK)
+WWTR1	chr3	149517235	149736714	sarcoma	WWTR1-CAMTA1; epithelioid haemangioendothelioma
+LPP	chr3	188153284	188890671	sarcoma	HMGA2-LPP; lipoma, chondroid hamartoma
+FGFR3	chr4	1793293	1808872	sarcoma	RTK fusion and amplification
+PDGFRA	chr4	54229280	54298245	sarcoma	GIST; imatinib target
+KIT	chr4	54657267	54740783	sarcoma	GIST; imatinib target
+KDR	chr4	55078481	55125595	sarcoma	VEGFR2; angiosarcoma
+DUX4	chr4	190173774	190185942	sarcoma	CIC-DUX4; round cell sarcoma
+SDHA	chr5	218303	257082	sarcoma	SDH-deficient GIST and paraganglioma
+TERT	chr5	1253147	1295068	sarcoma	Promoter and structural activation
+TRIO	chr5	14143342	14532128	sarcoma	TRIO-TERT; undifferentiated sarcoma
+APC	chr5	112707518	112846239	sarcoma	Wnt pathway; desmoid fibromatosis
+PDGFRB	chr5	150113839	150155872	sarcoma	Kinase fusions in myofibroblastic tumours
+CDX1	chr5	150166778	150184558	sarcoma	Rare fusion partner
+NPM1	chr5	171387116	171411810	sarcoma	Fusion partner
+FGFR4	chr5	177086905	177098144	sarcoma	Rhabdomyosarcoma; RTK
+FLT4	chr5	180601506	180649624	sarcoma	VEGFR3; angiosarcoma
+PHF1	chr6	33410399	33416453	sarcoma	PHF1 fusions; ossifying fibromyxoid tumour, ESS
+FOXO3	chr6	108559835	108684774	sarcoma	FOXO family transcription factor
+VGLL2	chr6	117265558	117273565	sarcoma	VGLL2 fusions; infantile spindle cell RMS
+ROS1	chr6	117287353	117425942	sarcoma	Kinase fusions
+ETV1	chr7	13891229	13991425	sarcoma	ETV1 rearrangement
+JAZF1	chr7	27830573	28180795	sarcoma	JAZF1-SUZ12; endometrial stromal sarcoma
+EGFR	chr7	55019017	55211628	sarcoma	Receptor tyrosine kinase amplification
+CDK6	chr7	92604921	92836573	sarcoma	Cell cycle kinase amplification
+MET	chr7	116672196	116798377	sarcoma	Receptor tyrosine kinase amplification
+BRAF	chr7	140719327	140924929	sarcoma	MAPK activation
+CNTNAP2	chr7	146116002	148420998	sarcoma	7q35 deletion
+FGFR1	chr8	38400215	38468834	sarcoma	RTK fusion and amplification
+PLAG1	chr8	56160909	56211324	sarcoma	PLAG1 fusions; lipoblastoma, myoepithelioma
+MYBL1	chr8	66562175	66614247	sarcoma	Transcription factor; rare rearrangement
+NCOA2	chr8	70109782	70403808	sarcoma	NCOA2 fusions; congenital spindle cell RMS
+HEY1	chr8	79762371	79767857	sarcoma	HEY1-NCOA2; mesenchymal chondrosarcoma
+MYC	chr8	127735434	127742951	sarcoma	8q24 amplification; radiation-associated angiosarcoma
+PTPRD	chr9	8314246	10613002	sarcoma	Deletion; tumour suppressor
+CDKN2A	chr9	21967752	21995301	sarcoma	CDK4/6 inhibitor; deleted in MPNST/DDLPS
+CDKN2B	chr9	22002903	22009305	sarcoma	Co-deleted with CDKN2A
+VCP	chr9	35053928	35072668	sarcoma	Fusion partner
+NTRK2	chr9	84668375	85095751	sarcoma	Kinase fusions
+NR4A3	chr9	99821855	99866891	sarcoma	EWSR1-NR4A3; extraskeletal myxoid chondrosarcoma
+BCOR	chrX	40049815	40177329	sarcoma	BCOR-CCNB3 / BCOR-ITD round cell sarcoma
+SSX1	chrX	48255392	48267444	sarcoma	SS18-SSX1; synovial sarcoma
+SSX4	chrX	48383516	48393347	sarcoma	SS18-SSX4; synovial sarcoma
+TFE3	chrX	49028726	49043410	sarcoma	ASPSCR1-TFE3 alveolar soft part sarcoma; PEComa
+CCNB3	chrX	50202713	50351914	sarcoma	BCOR-CCNB3 round cell sarcoma
+SSX2	chrX	52696896	52707178	sarcoma	SS18-SSX2; synovial sarcoma
+FOXO4	chrX	71095851	71103532	sarcoma	FOXO family transcription factor
+OGT	chrX	71533087	71575892	sarcoma	OGT-PHF1; endometrial stromal sarcoma

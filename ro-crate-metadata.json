@@ -21,9 +21,9 @@
         {
             "@id": "./",
             "@type": "Dataset",
-            "creativeWorkStatus": "InProgress",
-            "datePublished": "2026-04-29T11:16:38+00:00",
-            "description": "# IntGenomicsLab/lrsomatic\n\n[![Open in GitHub Codespaces](https://img.shields.io/badge/Open_In_GitHub_Codespaces-black?labelColor=grey&logo=github)](https://github.com/codespaces/new/IntGenomicsLab/lrsomatic)\n[![GitHub Actions CI Status](https://github.com/IntGenomicsLab/lrsomatic/actions/workflows/nf-test.yml/badge.svg)](https://github.com/IntGenomicsLab/lrsomatic/actions/workflows/nf-test.yml)\n[![GitHub Actions Linting Status](https://github.com/IntGenomicsLab/lrsomatic/actions/workflows/linting.yml/badge.svg)](https://github.com/IntGenomicsLab/lrsomatic/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.17751829-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.17751829)\n[![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)\n\n[![Nextflow](https://img.shields.io/badge/version-%E2%89%A525.04.0-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)\n[![nf-core template version](https://img.shields.io/badge/nf--core_template-4.0.2-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/4.0.2)\n[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)\n[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)\n[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)\n[![Launch on Seqera Platform](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Seqera%20Platform-%234256e7)](https://cloud.seqera.io/launch?pipeline=https://github.com/IntGenomicsLab/lrsomatic)\n\n## Introduction\n\n**IntGenomicsLab/lrsomatic** is a robust bioinformatics pipeline designed for processing and analyzing **somatic DNA sequencing** data for long-read sequencing technologies from **Oxford Nanopore** and **PacBio**. It supports both canonical base DNA and modified base calling, including specialized applications such as **Fiber-seq**.\n\nThis **end-to-end pipeline** handles the entire workflow \u2014 **from raw read processing and alignment, to comprehensive somatic variant calling**, including single nucleotide variants, indels, structural variants, copy number alterations, and modified bases.\n\nIt can be run in both **matched tumour-normal** and **tumour-only mode**, offering flexibility depending on the users study design.\n\nDeveloped using **Nextflow DSL2**, it offers high portability and scalability across diverse computing environments. By leveraging Docker or Singularity containers, installation is streamlined and results are highly reproducible. Each process runs in an isolated container, simplifying dependency management and updates. Where applicable, pipeline components are sourced from **nf-core/modules**, promoting reuse, interoperability, and consistency within the broader Nextflow and nf-core ecosystems.\n\nFor more information on how to run the pipeline, you can also go [here](https://intgenomicslab.github.io/lrsomatic).\n\n## Pipeline summary\n\n![image](./assets/lrsomatic_1.0.png)\n\n**1) Pre-processing:**\n\na. Raw read QC ([`cramino`](https://github.com/wdecoster/cramino))\n\nb. Alignment to the reference genome ([`minimap2`](https://github.com/lh3/minimap2))\n\nc. Post alignment QC ([`cramino`](https://github.com/wdecoster/cramino), [`samtools idxstats`](https://github.com/samtools/samtools), [`samtools flagstats`](https://github.com/samtools/samtools), [`samtools stats`](https://github.com/samtools/samtools))\n\nd. Specific for calling modified base calling ([`Modkit`](https://github.com/nanoporetech/modkit), [`Fibertools`](https://github.com/fiberseq/fibertools-rs))\n\n**2i) Matched mode: small variant calling:**\n\na. Calling Germline SNPs ([`Clair3`](https://github.com/HKU-BAL/Clair3))\n\nb. Phasing and Haplotagging the SNPs in the normal and tumour BAM ([`LongPhase`](https://github.com/twolinin/longphase))\n\nc. Calling somatic SNVs ([`ClairS`](https://github.com/HKU-BAL/ClairS))\n\n**2ii) Tumour only mode: small variant calling:**\n\na. Calling Germline SNPs and somatic SNVs ([`ClairS-TO`](https://github.com/HKU-BAL/ClairS-TO))\n\nb. Phasing and Haplotagging germline SNPs in tumour BAM ([`LongPhase`](https://github.com/twolinin/longphase))\n\n**3) Large variant calling:**\n\na. Somatic structural variant calling ([`Severus`](https://github.com/KolmogorovLab/Severus))\n\nb. Copy number alterion calling; long read version of ([`ASCAT`](https://github.com/VanLoo-lab/ascat))\n\n**4) Annotation:**\n\na. Small variant annotation ([`VEP`](https://github.com/Ensembl/ensembl-vep))\n\nb. Structural variant annotation ([`VEP`](https://github.com/Ensembl/ensembl-vep))\n\n<!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core\n     workflows use the \"tube map\" design for that. See https://nf-co.re/docs/guidelines/graphic_design/workflow_diagrams#examples for examples.   -->\n\n## Usage\n\n> [!NOTE]\n> If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.\n\nFirst prepare a samplesheet with your input data that looks as follows:\n\n```csv\nsample,bam_tumor,bam_normal,platform,sex,fiber\nsample1,tumour.bam,normal.bam,ont,female,n\nsample2,tumour.bam,,ont,female,y\nsample3,tumour.bam,,pb,male,n\nsample4,tumour.bam,normal.bam,pb,male,y\n```\n\nEach row represents a sample. The bam files should always be unaligned bam files. All fields except for `bam_normal` are required. If `bam_normal` is empty, the pipeline will run in tumour only mode. `platform` should be either `ont` or `pb` for Oxford Nanopore Sequencing or PacBio sequencing, respectively. `sex` refers to the biological sex of the sample and should be either `female` or `male`. Finally, `fiber` specifies whether your sample is Fiber-seq data or not and should have either `y` for Yes or `n` for No.\n\nNow, you can run the pipeline using:\n\n```bash\nnextflow run IntGenomicsLab/lrsomatic \\\n   -profile <docker/singularity/.../institute> \\\n   --input samplesheet.csv \\\n   --outdir <OUTDIR>\n```\n\nMore detail is given in our [usage documentation](/docs/usage.md)\n\n> [!WARNING]\n> Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/running/run-pipelines#using-parameter-files).\n\n## Credits\n\nIntGenomicsLab/lr_somatic was originally written by Luuk Harbers, Robert Forsyth, Alexandra Pan\u010d\u00edkov\u00e1, Marios Eftychiou, Ruben Cools, Laurens Lambrechts, and Jonas Demeulemeester.\n\n## Pipeline output\n\nThis pipeline produces a series of different output files. The main output is an aligned and phased tumour bam file. This bam file can be used by any typical downstream tool that uses bam files as input. Furthermore, we have sample-specific QC outputs from `cramino` (fastq), `cramino` (bam), `mosdepth`, `samtools` (stats/flagstat/idxstats), and optionally `fibertools`. Finally, we have a `multiqc` report from that combines the output from `mosdepth` and `samtools` into one html report.\n\nBesides QC and the aligned and phased bam file, we have output from (structural) variant and copy number callers, of which some are optional. The output from these variant callers can be found in their respective folders. For small and structural variant callers (`clairS`, `clairS-TO`, and `severus`) these will contain, among others, `vcf` files with called variants. For `ascat` these contain files with final copy number information and plots of the copy number profiles.\n\nExample output directory structure:\n\n```\n\u251c\u2500\u2500 Sample 1\n\u2502    \u251c\u2500\u2500 ascat\n\u2502    \u251c\u2500\u2500 bamfiles\n\u2502    \u251c\u2500\u2500 qc\n\u2502    \u2502    \u251c\u2500\u2500 tumor\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 cramino_aln\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 cramino_ubam\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 fibertoolsrs\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 mosdepth\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 samtools\n\u2502    \u251c\u2500\u2500 variants\n\u2502    \u2502   \u251c\u2500\u2500clairS-TO\n\u2502    \u2502   \u251c\u2500\u2500severus\n\u2502    \u251c\u2500\u2500 vep\n\u2502    \u2502   \u251c\u2500\u2500 germline\n\u2502    \u2502   \u251c\u2500\u2500 somatic\n\u2502    \u2502   \u251c\u2500\u2500 SVs\n\u2502\n\u251c\u2500\u2500 Sample 2\n\u2502    \u251c\u2500\u2500 ascat\n\u2502    \u251c\u2500\u2500 bamfiles\n\u2502    \u251c\u2500\u2500 qc\n\u2502    \u2502    \u251c\u2500\u2500 tumor\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 cramino_aln\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 cramino_ubam\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 fibertoolsrs\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 mosdepth\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 samtools\n\u2502    \u2502    \u251c\u2500\u2500 normal\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 cramino_aln\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 cramino_ubam\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 fibertoolsrs\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 mosdepth\n\u2502    \u2502    \u2502   \u251c\u2500\u2500 samtools\n\u2502    \u251c\u2500\u2500 variants\n\u2502    \u2502   \u251c\u2500\u2500 clair3\n\u2502    \u2502   \u251c\u2500\u2500 clairS\n\u2502    \u2502   \u251c\u2500\u2500 severus\n\u2502    \u251c\u2500\u2500 vep\n\u2502    \u2502   \u251c\u2500\u2500 germline\n\u2502    \u2502   \u251c\u2500\u2500 somatic\n\u2502    \u2502   \u251c\u2500\u2500 SVs\n\u251c\u2500\u2500 pipeline_info\n```\n\nmore detail is given in our [output documentation](/docs/output.md)\n\n## Contributions and Support\n\nIf you would like to contribute to this pipeline, please see the [contributing guidelines](docs/CONTRIBUTING.md).\n\n## Citations\n\nIf you use `IntGenomicsLab/lrsomatic` for your analysis, please cite it using the following:\n\n> LRSomatic: a highly scalable and robust pipeline for somatic variant calling in long-read sequencing data\n>\n> Robert A. Forsyth*, Luuk Harbers*, Amber Verhasselt, Ana-Luc\u00eda Rocha Iraiz\u00f3s, Sidi Yang, Joris Vande Velde, Christopher Davies, Nischalan Pillay, Laurens Lambrechts, Jonas Demeulemeester\n>\n> bioRxiv 2026.02.26.707772; doi: https://doi.org/10.64898/2026.02.26.707772\n\nAn extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.\n\nThis pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) community, reused here under the [MIT license](https://github.com/nf-core/tools/blob/main/LICENSE).\n\n> **The nf-core framework for community-curated bioinformatics pipelines.**\n>\n> Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.\n>\n> _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).\n",
+            "creativeWorkStatus": "Stable",
+            "datePublished": "2026-08-14T13:41:35+00:00",
+            "description": "# IntGenomicsLab/lrsomatic\n\n[![Open in GitHub Codespaces](https://img.shields.io/badge/Open_In_GitHub_Codespaces-black?labelColor=grey&logo=github)](https://github.com/codespaces/new/IntGenomicsLab/lrsomatic)\n[![GitHub Actions CI Status](https://github.com/IntGenomicsLab/lrsomatic/actions/workflows/nf-test.yml/badge.svg)](https://github.com/IntGenomicsLab/lrsomatic/actions/workflows/nf-test.yml)\n[![GitHub Actions Linting Status](https://github.com/IntGenomicsLab/lrsomatic/actions/workflows/linting.yml/badge.svg)](https://github.com/IntGenomicsLab/lrsomatic/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.17751829-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.17751829)\n[![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)\n\n[![Nextflow](https://img.shields.io/badge/version-%E2%89%A525.10.4-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)\n[![nf-core template version](https://img.shields.io/badge/nf--core_template-4.1.0-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/4.1.0)\n[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)\n[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)\n[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)\n[![Launch on Seqera Platform](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Seqera%20Platform-%234256e7)](https://cloud.seqera.io/launch?pipeline=https://github.com/IntGenomicsLab/lrsomatic)\n\n## Introduction\n\n**IntGenomicsLab/lrsomatic** is a robust bioinformatics pipeline designed for processing and analyzing **somatic DNA sequencing** data for long-read sequencing technologies from **Oxford Nanopore** and **PacBio**. It supports both canonical base DNA and modified base calling, including specialized applications such as **Fiber-seq**.\n\nThis **end-to-end pipeline** handles the entire workflow — **from raw read processing and alignment, to comprehensive somatic variant calling**, including single nucleotide variants, indels, structural variants, copy number alterations, and modified bases.\n\nIt can be run in both **matched tumour-normal** and **tumour-only mode**, offering flexibility depending on the users study design.\n\nDeveloped using **Nextflow DSL2**, it offers high portability and scalability across diverse computing environments. By leveraging Docker or Singularity containers, installation is streamlined and results are highly reproducible. Each process runs in an isolated container, simplifying dependency management and updates. Where applicable, pipeline components are sourced from **nf-core/modules**, promoting reuse, interoperability, and consistency within the broader Nextflow and nf-core ecosystems.\n\nFor more information on how to run the pipeline, you can also go [here](https://intgenomicslab.github.io/lrsomatic).\n\n## Pipeline summary\n\n![image](./assets/lrsomatic_1.0.png)\n\n**1) Pre-processing:**\n\na. Raw read QC ([`cramino`](https://github.com/wdecoster/cramino))\n\nb. Alignment to the reference genome ([`minimap2`](https://github.com/lh3/minimap2))\n\nc. Post alignment QC ([`cramino`](https://github.com/wdecoster/cramino), [`samtools idxstats`](https://github.com/samtools/samtools), [`samtools flagstats`](https://github.com/samtools/samtools), [`samtools stats`](https://github.com/samtools/samtools))\n\nd. Specific for calling modified base calling ([`Modkit`](https://github.com/nanoporetech/modkit), [`Fibertools`](https://github.com/fiberseq/fibertools-rs))\n\n**2i) Matched mode: small variant calling:**\n\na. Calling Germline SNPs ([`Clair3`](https://github.com/HKU-BAL/Clair3))\n\nb. Phasing and Haplotagging the SNPs in the normal and tumour BAM ([`LongPhase`](https://github.com/twolinin/longphase))\n\nc. Calling somatic SNVs ([`ClairS`](https://github.com/HKU-BAL/ClairS))\n\n**2ii) Tumour only mode: small variant calling:**\n\na. Calling Germline SNPs and somatic SNVs ([`ClairS-TO`](https://github.com/HKU-BAL/ClairS-TO))\n\nb. Phasing and Haplotagging germline SNPs in tumour BAM ([`LongPhase`](https://github.com/twolinin/longphase))\n\n**3) Large variant calling:**\n\na. Somatic structural variant calling ([`Severus`](https://github.com/KolmogorovLab/Severus))\n\nb. Copy number alterion calling; long read version of ([`ASCAT`](https://github.com/VanLoo-lab/ascat))\n\n**4) Annotation:**\n\na. Small variant annotation ([`VEP`](https://github.com/Ensembl/ensembl-vep))\n\nb. Structural variant annotation ([`VEP`](https://github.com/Ensembl/ensembl-vep))\n\n<!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core\n     workflows use the \"tube map\" design for that. See https://nf-co.re/docs/guidelines/graphic_design/workflow_diagrams#examples for examples.   -->\n\n## Usage\n\n> [!NOTE]\n> If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.\n\nFirst prepare a samplesheet with your input data that looks as follows:\n\n```csv\nsample,bam_tumor,bam_normal,platform,sex,fiber\nsample1,tumour.bam,normal.bam,ont,female,n\nsample2,tumour.bam,,ont,female,y\nsample3,tumour.bam,,pb,male,n\nsample4,tumour.bam,normal.bam,pb,male,y\n```\n\nEach row represents a sample. The bam files should always be unaligned bam files. All fields except for `bam_normal` are required. If `bam_normal` is empty, the pipeline will run in tumour only mode. `platform` should be either `ont` or `pb` for Oxford Nanopore Sequencing or PacBio sequencing, respectively. `sex` refers to the biological sex of the sample and should be either `female` or `male`. Finally, `fiber` specifies whether your sample is Fiber-seq data or not and should have either `y` for Yes or `n` for No.\n\nNow, you can run the pipeline using:\n\n```bash\nnextflow run IntGenomicsLab/lrsomatic \\\n   -profile <docker/singularity/.../institute> \\\n   --input samplesheet.csv \\\n   --outdir <OUTDIR>\n```\n\nMore detail is given in our [usage documentation](/docs/usage.md)\n\n> [!WARNING]\n> Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/running/run-pipelines#using-parameter-files).\n\n## Credits\n\nIntGenomicsLab/lr_somatic was originally written by Luuk Harbers, Robert Forsyth, Amber Verhasselt, Alexandra Pančíková, Marios Eftychiou, Ruben Cools, Laurens Lambrechts, and Jonas Demeulemeester.\n\n## Pipeline output\n\nThis pipeline produces a series of different output files. The main output is an aligned and phased tumour bam file. This bam file can be used by any typical downstream tool that uses bam files as input. Furthermore, we have sample-specific QC outputs from `cramino` (fastq), `cramino` (bam), `mosdepth`, `samtools` (stats/flagstat/idxstats), and optionally `fibertools`. Finally, we have a `multiqc` report that combines the output from `mosdepth` and `samtools` into one HTML report, and a self-contained per-sample HTML report (`<sample>/report/<sample>_report.html`) covering small variants, structural variants, copy number and QC in one place — disable it with `--skip_report`.\n\nBesides QC and the aligned and phased bam file, we have output from (structural) variant and copy number callers, of which some are optional. The output from these variant callers can be found in their respective folders. For small and structural variant callers (`clairS`, `clairS-TO`, and `severus`) these will contain, among others, `vcf` files with called variants. For `ascat` these contain files with final copy number information and plots of the copy number profiles.\n\nExample output directory structure:\n\n```\n├── Sample 1\n│    ├── ascat\n│    ├── bamfiles\n│    ├── qc\n│    │    ├── tumor\n│    │    │   ├── cramino_aln\n│    │    │   ├── cramino_ubam\n│    │    │   ├── fibertoolsrs\n│    │    │   ├── mosdepth\n│    │    │   ├── samtools\n│    ├── variants\n│    │   ├──clairS-TO\n│    │   ├──severus\n│    ├── vep\n│    │   ├── germline\n│    │   ├── somatic\n│    │   ├── SVs\n│    ├── report\n│\n├── Sample 2\n│    ├── ascat\n│    ├── bamfiles\n│    ├── qc\n│    │    ├── tumor\n│    │    │   ├── cramino_aln\n│    │    │   ├── cramino_ubam\n│    │    │   ├── fibertoolsrs\n│    │    │   ├── mosdepth\n│    │    │   ├── samtools\n│    │    ├── normal\n│    │    │   ├── cramino_aln\n│    │    │   ├── cramino_ubam\n│    │    │   ├── fibertoolsrs\n│    │    │   ├── mosdepth\n│    │    │   ├── samtools\n│    ├── variants\n│    │   ├── clair3\n│    │   ├── clairS\n│    │   ├── severus\n│    ├── vep\n│    │   ├── germline\n│    │   ├── somatic\n│    │   ├── SVs\n├── pipeline_info\n```\n\nmore detail is given in our [output documentation](/docs/output.md)\n\n## Contributions and Support\n\nIf you would like to contribute to this pipeline, please see the [contributing guidelines](docs/CONTRIBUTING.md).\n\n## Citations\n\nIf you use `IntGenomicsLab/lrsomatic` for your analysis, please cite it using the following:\n\n> LRSomatic: a highly scalable and robust pipeline for somatic variant calling in long-read sequencing data\n>\n> Robert A. Forsyth*, Luuk Harbers*, Amber Verhasselt, Ana-Lucía Rocha Iraizós, Sidi Yang, Joris Vande Velde, Christopher Davies, Nischalan Pillay, Laurens Lambrechts, Jonas Demeulemeester\n>\n> bioRxiv 2026.02.26.707772; doi: https://doi.org/10.64898/2026.02.26.707772\n\nAn extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.\n\nThis pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) community, reused here under the [MIT license](https://github.com/nf-core/tools/blob/main/LICENSE).\n\n> **The nf-core framework for community-curated bioinformatics pipelines.**\n>\n> Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.\n>\n> _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).\n",
             "hasPart": [
                 {
                     "@id": "main.nf"
@@ -96,7 +96,7 @@
             },
             "mentions": [
                 {
-                    "@id": "#35ac8253-be93-4adb-a10f-9c74068c55d5"
+                    "@id": "#096b60a2-c60b-4f0d-8b26-4baa567c4ef5"
                 }
             ],
             "name": "IntGenomicsLab/lrsomatic"
@@ -123,13 +123,36 @@
                 "SoftwareSourceCode",
                 "ComputationalWorkflow"
             ],
-            "contributor": [
+            "author": [
+                {
+                    "@id": "https://orcid.org/0000-0003-3910-6497"
+                },
+                {
+                    "@id": "https://orcid.org/0000-0002-6202-8477"
+                },
+                {
+                    "@id": "https://orcid.org/0000-0002-0693-132X"
+                },
+                {
+                    "@id": "https://orcid.org/0009-0004-7484-5564"
+                },
+                {
+                    "@id": "https://orcid.org/0000-0002-5929-6956"
+                },
+                {
+                    "@id": "https://orcid.org/0000-0002-1415-4591"
+                },
                 {
                     "@id": "https://orcid.org/0000-0002-2660-2478"
                 }
             ],
+            "contributor": [
+                {
+                    "@id": "https://orcid.org/0009-0000-4447-9795"
+                }
+            ],
             "dateCreated": "",
-            "dateModified": "2026-04-28T15:06:34Z",
+            "dateModified": "2026-08-14T15:41:35Z",
             "dct:conformsTo": "https://bioschemas.org/profiles/ComputationalWorkflow/1.0-RELEASE/",
             "keywords": [
                 "nf-core",
@@ -137,6 +160,14 @@
             ],
             "license": [
                 "MIT"
+            ],
+            "maintainer": [
+                {
+                    "@id": "https://orcid.org/0000-0003-3910-6497"
+                },
+                {
+                    "@id": "https://orcid.org/0000-0002-6202-8477"
+                }
             ],
             "name": [
                 "IntGenomicsLab/lrsomatic"
@@ -168,11 +199,11 @@
             "version": "!>=25.10.4"
         },
         {
-            "@id": "#35ac8253-be93-4adb-a10f-9c74068c55d5",
+            "@id": "#096b60a2-c60b-4f0d-8b26-4baa567c4ef5",
             "@type": "TestSuite",
             "instance": [
                 {
-                    "@id": "#971f545c-90dd-4c2d-94ca-3df3692e940c"
+                    "@id": "#3094354b-3f75-4b03-837e-301a462687e7"
                 }
             ],
             "mainEntity": {
@@ -181,7 +212,7 @@
             "name": "Test suite for IntGenomicsLab/lrsomatic"
         },
         {
-            "@id": "#971f545c-90dd-4c2d-94ca-3df3692e940c",
+            "@id": "#3094354b-3f75-4b03-837e-301a462687e7",
             "@type": "TestInstance",
             "name": "GitHub Actions workflow for testing IntGenomicsLab/lrsomatic",
             "resource": "repos/IntGenomicsLab/lrsomatic/actions/workflows/nf-test.yml",
@@ -305,9 +336,68 @@
             "url": "https://nf-co.re/"
         },
         {
+            "@id": "https://orcid.org/0000-0003-3910-6497",
+            "@type": "Person",
+            "affiliation": "VIB Center for Cancer Biology, VIB, Leuven, Belgium; Laboratory of Integrative Cancer Genomics, Department of Oncology, KU Leuven, Leuven, Belgium; VIB Center for AI and Computational Biology, VIB, Leuven, Belgium",
+            "email": "luuk.harbers@kuleuven.be",
+            "name": "Luuk Harbers",
+            "url": "https://github.com/ljwharbers"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-6202-8477",
+            "@type": "Person",
+            "affiliation": "VIB Center for Cancer Biology, VIB, Leuven, Belgium; Laboratory of Integrative Cancer Genomics, Department of Oncology, KU Leuven, Leuven, Belgium; VIB Center for AI and Computational Biology, VIB, Leuven, Belgium",
+            "email": "robertalexander.forsyth@kuleuven.be",
+            "name": "Robert Forsyth",
+            "url": "https://github.com/robert-a-forsyth"
+        },
+        {
+            "@id": "https://orcid.org/0009-0000-4447-9795",
+            "@type": "Person",
+            "affiliation": "Laboratory for Genetics of Malignant Disorders, Department of Human Genetics, KU Leuven, Leuven, Belgium",
+            "email": "amber.verhasselt@kuleuven.be",
+            "name": "Amber Verhasselt",
+            "url": "https://github.com/AmberVerhasselt"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-0693-132X",
+            "@type": "Person",
+            "affiliation": "VIB Center for Cancer Biology, VIB, Leuven, Belgium; Laboratory of Integrative Cancer Genomics, Department of Oncology, KU Leuven, Leuven, Belgium; VIB Center for AI and Computational Biology, VIB, Leuven, Belgium; Laboratory for Computational Biology, Department of Human Genetics, KU Leuven, Leuven, Belgium; VIB-KU Leuven Center for Brain & Disease Research, Leuven, Belgium",
+            "email": "alexandra.pancikova@kuleuven.be",
+            "name": "Alexandra Pančíková",
+            "url": "https://github.com/AlexanRNA"
+        },
+        {
+            "@id": "https://orcid.org/0009-0004-7484-5564",
+            "@type": "Person",
+            "affiliation": "VIB Center for Cancer Biology, VIB, Leuven, Belgium; Laboratory of Integrative Cancer Genomics, Department of Oncology, KU Leuven, Leuven, Belgium; VIB Center for AI and Computational Biology, VIB, Leuven, Belgium",
+            "email": "ruben.cools@kuleuven.be",
+            "name": "Ruben Cools",
+            "url": "https://github.com/rcools"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-5929-6956",
+            "@type": "Person",
+            "affiliation": "VIB Center for Cancer Biology, VIB, Leuven, Belgium; Laboratory of Integrative Cancer Genomics, Department of Oncology, KU Leuven, Leuven, Belgium; VIB Center for AI and Computational Biology, VIB, Leuven, Belgium; Laboratory of Multi-omic Integrative Bioinformatics, Department of Human Genetics, KU Leuven, Leuven, Belgium",
+            "email": "marios.eftychiou@kuleuven.be",
+            "name": "Marios Eftychiou",
+            "url": "https://github.com/MariosEft97"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-1415-4591",
+            "@type": "Person",
+            "affiliation": "VIB Center for Cancer Biology, VIB, Leuven, Belgium; Laboratory of Integrative Cancer Genomics, Department of Oncology, KU Leuven, Leuven, Belgium; VIB Center for AI and Computational Biology, VIB, Leuven, Belgium",
+            "email": "laurens.lambrechts@kuleuven.be",
+            "name": "Laurens Lambrechts",
+            "url": "https://github.com/laulambr"
+        },
+        {
             "@id": "https://orcid.org/0000-0002-2660-2478",
             "@type": "Person",
-            "name": "Jonas Demeulemeester"
+            "affiliation": "VIB Center for Cancer Biology, VIB, Leuven, Belgium; Laboratory of Integrative Cancer Genomics, Department of Oncology, KU Leuven, Leuven, Belgium; VIB Center for AI and Computational Biology, VIB, Leuven, Belgium",
+            "email": "jonas.demeulemeester@kuleuven.be",
+            "name": "Jonas Demeulemeester",
+            "url": "https://github.com/jdemeul"
         }
     ]
 }

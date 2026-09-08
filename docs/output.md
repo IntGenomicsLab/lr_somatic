@@ -38,7 +38,8 @@ The pipeline produces per-sample output directories. Two modes exist depending o
 │    ├── vep
 │    │   ├── somatic
 │    │   └── SVs
-│    └── wakhan
+│    ├── wakhan
+│    └── report
 ```
 
 **Paired tumor + normal sample**:
@@ -81,7 +82,8 @@ The pipeline produces per-sample output directories. Two modes exist depending o
 │    │   ├── germline
 │    │   ├── somatic
 │    │   └── SVs
-│    └── wakhan
+│    ├── wakhan
+│    └── report
 ├── pipeline_info
 └── multiqc
 ```
@@ -515,6 +517,38 @@ Phased variant calls produced by Longphase. Present in all samples.
 | `solutions_ranks.tsv`                                                                                  | rank of potential purity ploidy solutions                                                          |
 
 </details>
+
+### `report`
+
+<details markdown="1">
+<summary>Output files</summary>
+
+```
+├── report
+│   ├── {sample}_report.html
+```
+
+| File                   | Description                                                                                                                                                                                                                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `{sample}_report.html` | Self-contained per-sample HTML report ([lrsomatic_report](https://github.com/ljwharbers/lrsomatic_report)): circos plot, small/structural variant tables, copy-number summary, and QC. Any section whose upstream data is unavailable (e.g. a skipped tool) shows a "not available" notice instead. |
+
+</details>
+
+This is the final step of the pipeline, run after SNV/SV calling, ASCAT, WAKHAN and QC. Disable it with `--skip_report`.
+
+Sections:
+
+- **Small variants** — the VEP-annotated somatic SNVs/indels, with VAF, depth and phase set taken from the phased somatic VCF that VEP annotated. A footnote under the table names the file those VAF columns came from and how many rows they joined to; after a consensus run it also flags that the VAF of a multi-caller variant comes from whichever caller won the merge, so it need not match the `callers` column beside it. Unfiltered by default; see `--report_gene_panel` in [usage](usage.md#report-options) for panel filtering.
+- **Structural variants** — SEVERUS breakpoints, annotated from the VEP SV VCF (`{sample}_SV_VEP.vcf.gz`), one row per rearrangement. Breakends additionally get their own circos plot, cross-linked to the SV table and redrawn as the table is filtered. Skipping VEP leaves the SV table unannotated but still drawn on the circos plot.
+- **Copy number** — ASCAT purity/ploidy plus its diagnostic plots, and, when WAKHAN ran, its ranked purity/ploidy solutions with the interactive per-solution genome copy-number/breakpoint plots and the ploidy/purity heatmap.
+- **QC** — mosdepth, cramino and samtools statistics; for a matched tumour/normal pair both sides are shown side by side. Phasing statistics (WhatsHap) are a collapsible block within this section.
+
+Filtering in the browser:
+
+- **Gene panels** are checkboxes in the panel bar. Tick any number and a row is kept if it hits any of them (a union); with none ticked the tables are unfiltered. `--report_gene_panel` only sets which are ticked on load — see [usage](usage.md#applying-several-panels-at-once). With two or more ticked, each `panel_hit` entry names the panel it matched in square brackets.
+- **Categorical columns** filter by tickbox dropdown rather than a text box: `consequence`, `impact` and `callers` on the small-variant table, and `svclass`, `svtype`, `impact`, `consequence` and `caller` on the SV table. Each dropdown lists the values actually present in that sample with a row count. Ticking several values in one column is OR; ticking values in two columns is AND. A column with fewer than two distinct values keeps a plain text box. Every other column keeps its text box, and the table's own search box still does substring across all columns.
+
+The report is one self-contained file — plots and tables are embedded, so it can be copied or emailed on its own.
 
 ### `multiqc`
 

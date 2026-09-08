@@ -1,0 +1,425 @@
+---
+title: "LRSomatic — per-sample genomics report"
+date: today
+format:
+  html:
+    self-contained: true
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    theme: [flatly, ../assets/styles/report.scss]
+    code-fold: true
+    page-layout: full
+params:
+  sample_id:     "SAMPLE"
+  sample_dir:    ""
+  reference:     "t2t"
+  sex:           "female"
+  default_panels: "__all__" # panel keys checked on load; "__all__" = none checked
+  all_panels:    NULL   # named list from load_all_gene_panels()
+  title:         "LRSomatic Report"
+  repo_dir:      "."
+  outputs:       NULL   # named list from locate_outputs()
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+suppressPackageStartupMessages({
+  library(data.table)
+  library(dplyr)
+  library(DT)
+  library(htmltools)
+  library(ggplot2)
+})
+
+repo_dir = params$repo_dir
+source(file.path(repo_dir, "R/utils.R"))
+source(file.path(repo_dir, "R/references.R"))
+source(file.path(repo_dir, "R/locate_outputs.R"))
+source(file.path(repo_dir, "R/parse_smallvariants.R"))
+source(file.path(repo_dir, "R/parse_severus.R"))
+source(file.path(repo_dir, "R/parse_ascat.R"))
+source(file.path(repo_dir, "R/parse_qc.R"))
+source(file.path(repo_dir, "R/circos.R"))
+source(file.path(repo_dir, "R/circos_bnd.R"))
+
+source(file.path(repo_dir, "R/sections.R"))
+for (f in list.files(file.path(repo_dir, "R/sections"), pattern = "\\.R$", full.names = TRUE)) {
+  source(f)
+}
+
+outputs = params$outputs
+sample_id = params$sample_id
+sample_dir = params$sample_dir
+
+# Section-module contract: each section owns locate() and parse(); see CLAUDE.md
+SECTION_DATA = list()
+for (s in SECTIONS) {
+  SECTION_DATA[[s$id]] = s$parse(s$locate(sample_dir, sample_id), SECTION_DATA)
+}
+
+# Load reference data
+cytobands    = load_cytobands(params$reference, file.path(repo_dir, "assets"))
+chrom_lens   = load_chrom_lengths(params$reference, file.path(repo_dir, "assets"))
+chromosomes  = chromosomes_for_sex(params$sex)
+chromosomes  = chromosomes[chromosomes %in% unique(cytobands$chrom)]
+
+# Panels checked on load (empty for --gene-panel none); only the summary cards use them, the tables filter client-side. Not tryCatch-wrapped: an unresolvable panel must fail the render
+panels      = resolve_selected_panels(params$default_panels, params$all_panels,
+                                      file.path(repo_dir, "assets"), params$reference)
+panel_genes = unique(unlist(lapply(panels, `[[`, "genes"), use.names = FALSE))
+
+# Parse ASCAT
+ascat_segments = parse_ascat_segments(outputs$ascat_segments)
+ascat_pp       = parse_ascat_purityploidy(outputs$ascat_purityploidy)
+
+# Parse Wakhan
+wakhan_solutions = parse_wakhan_solutions(outputs$wakhan_solutions)
+wakhan_cn_plots  = locate_wakhan_cn_plots(outputs$wakhan_dir, wakhan_solutions)
+
+# Parse QC
+qc_mosdepth = parse_mosdepth_summary(outputs$mosdepth_summary, names(chrom_lens))
+qc_mosdist  = parse_mosdepth_dist(outputs$mosdepth_dist)
+qc_cramino  = parse_cramino(outputs$cramino)
+qc_flagstat = parse_flagstat(outputs$flagstat)
+samtools_stats = parse_samtools_stats(outputs$samtools_stats)
+qc_normal_mosdepth = parse_mosdepth_summary(outputs$normal_mosdepth_summary, names(chrom_lens))
+qc_normal_cramino  = parse_cramino(outputs$normal_cramino)
+qc_normal_flagstat = parse_flagstat(outputs$normal_flagstat)
+qc_normal_samtools_stats = parse_samtools_stats(outputs$normal_samtools_stats)
+
+# Parse VEP + raw callers
+vep_data = parse_vep(outputs$vep_somatic)
+
+vaf_data = parse_caller_vcf(outputs$somatic_vaf_vcf, "somatic", sample_id = params$sample_id)
+
+# Source of the VAF/DP/GT/PS columns, for the footnote (ambiguous after a consensus merge)
+vaf_prov = vaf_provenance(outputs$somatic_vaf_vcf, sample_dir, sample_id = params$sample_id)
+
+variant_table = build_variant_table(vep_data, vaf_data, gene_panel = NULL)
+tmb_info = compute_tmb(variant_table)
+
+# Join coverage: a silently failing variant_key() shows up here as a near-zero count
+n_vaf = if (!is.null(variant_table) && "vaf" %in% names(variant_table))
+          sum(!is.na(variant_table$vaf)) else NA_integer_
+# Variants reported by more than one caller; always 0 on the VEP text path
+n_multi = if (!is.null(variant_table) && "callers" %in% names(variant_table))
+            sum(grepl(",", variant_table$callers, fixed = TRUE)) else 0L
+
+# SNV data for circos (from VEP file — contains all somatic variants)
+snv_circos = NULL
+if (!is.null(vep_data) && nrow(vep_data) > 0) {
+  snv_circos = unique(vep_data[, .(chrom, pos, ref, alt)])
+}
+
+# Draw circos to temp file, then embed as base64
+circos_tmp = tempfile(fileext = ".svg")
+tryCatch({
+  draw_circos(
+    snv_data    = snv_circos,
+    sv_nontrans = SECTION_DATA$sv$circos$nontrans,
+    sv_trans    = SECTION_DATA$sv$circos$translocations,
+    cnv_data    = ascat_segments,
+    cytobands   = cytobands,
+    chrom_lengths = chrom_lens,
+    chromosomes = chromosomes,
+    output_path = circos_tmp
+  )
+}, error = function(e) {
+  message("Circos plot failed: ", e$message)
+  circos_tmp <<- NULL
+})
+
+# Summary counts
+sv_table = SECTION_DATA$sv$table
+n_snv        = if (!is.null(vep_data)) nrow(unique(vep_data[, .(chrom, pos, ref, alt)])) else NA_integer_
+# One rearrangement per row (mates already collapsed)
+n_sv         = if (!is.null(sv_table) && nrow(sv_table) > 0) nrow(sv_table) else
+               if (!is.null(SECTION_DATA$sv))
+                 nrow(SECTION_DATA$sv$circos$nontrans) +
+                 nrow(SECTION_DATA$sv$circos$translocations) else NA_integer_
+# Interchromosomal breakends, apart from the intra-chromosomal ones
+n_trans      = if (!is.null(sv_table) && "svclass" %in% names(sv_table))
+                 sum(sv_table$svclass == "translocation", na.rm = TRUE) else NA_integer_
+n_intra_bnd  = if (!is.null(sv_table) && "svclass" %in% names(sv_table))
+                 sum(sv_table$svclass == "intra-chr breakend", na.rm = TRUE) else NA_integer_
+# No panel checked: cards read "N/A" rather than a misleading "0"; several panels union
+have_panel   = length(panels) > 0 && length(panel_genes) > 0
+n_panel_vars = if (!have_panel) NA_integer_ else
+               if (!is.null(variant_table))
+                 sum(variant_table$symbol %in% panel_genes, na.rm = TRUE) else 0L
+# Same test and windows as the client-side filter (sv_panel_hits())
+sv_panel_hit = if (!is.null(sv_table) && nrow(sv_table) > 0)
+                 sv_panel_hits(sv_table, panels) else character(0)
+n_panel_svs  = if (!have_panel) NA_integer_ else sum(nzchar(sv_panel_hit))
+```
+
+```{r panel-js-data, results='asis'}
+all_p = if (!is.null(params$all_panels) && length(params$all_panels) > 0)
+          params$all_panels else list()
+
+# Each panel ships symbols and, if coordinate-carrying, intervals; windows come from R (SV_PANEL_WINDOW_*) so card and filter agree
+panel_defs = vapply(names(all_p), function(nm) {
+  p    = all_p[[nm]]
+  syms = paste0("new Set([",
+                paste(js_quote(toupper(as.character(p$genes))), collapse = ","), "])")
+  ivs  = if (isTRUE(p$has_coords))
+    paste0("[", paste(sprintf("[%s,%s,%s,%s]",
+                              js_quote(p$chrom), as.integer(p$start), as.integer(p$end),
+                              js_quote(toupper(as.character(p$interval_gene)))),
+                      collapse = ","), "]")
+  else "[]"
+  sprintf("%s: {symbols: %s, hasCoords: %s, intervals: %s}",
+          js_quote(nm), syms, if (isTRUE(p$has_coords)) "true" else "false", ivs)
+}, character(1))
+
+cat("<script>\n")
+cat("const GENE_PANELS = {", paste(panel_defs, collapse = ",\n"), "};\n", sep = "")
+default_panels = setdiff(as.character(unlist(params$default_panels)), "__all__")
+# js_vec(): an empty selection must emit [], not [""]
+cat("const DEFAULT_PANELS = ", js_vec(default_panels), ";\n", sep = "")
+cat("const SV_PANEL_WINDOW_BND = ",   format(SV_PANEL_WINDOW_BND,   scientific = FALSE), ";\n", sep = "")
+cat("const SV_PANEL_WINDOW_OTHER = ", format(SV_PANEL_WINDOW_OTHER, scientific = FALSE), ";\n", sep = "")
+cat("const BND_SVTYPES = [", paste(js_quote(BND_SVTYPES), collapse = ","), "];\n", sep = "")
+cat(r"----(
+// Checked panels, shared by the filter hook, row counter, panel_hit renderer and SV footnote; column maps come from R (window.*_COLS). Empty `panels` is the unfiltered state
+window.svPanelState = { panels: DEFAULT_PANELS.slice(), customGenes: new Set() };
+
+// Every checked panel as {name, symbols, hasCoords, intervals}; a row passes if it hits any (union)
+function activePanelDefs() {
+  const st = window.svPanelState;
+  const out = [];
+  (st.panels || []).forEach(function (key) {
+    if (key === "__custom__") {
+      // Pasted symbols are symbol-only; an empty box contributes nothing
+      if (st.customGenes && st.customGenes.size > 0)
+        out.push({ name: "custom", symbols: st.customGenes, hasCoords: false, intervals: [] });
+      return;
+    }
+    const p = GENE_PANELS[key];
+    if (p) out.push({ name: key, symbols: p.symbols, hasCoords: p.hasCoords, intervals: p.intervals });
+  });
+  return out;
+}
+
+function splitGenes(cell) {
+  if (cell === null || cell === undefined) return [];
+  return String(cell).toUpperCase().split(/[;,]+/)
+    .map(function (g) { return g.trim(); })
+    .filter(function (g) { return g.length > 0; });
+}
+
+// fmt_bp() from R/utils.R; Math.round(x * 10) / 10 matches R's output (306000 -> "306 kb", not "306.0 kb")
+function fmtBp(x) {
+  const r = function (v) { return String(Math.round(v * 10) / 10); };
+  if (Math.abs(x) >= 1e6) return r(x / 1e6) + " Mb";
+  if (Math.abs(x) >= 1e3) return r(x / 1e3) + " kb";
+  return String(x) + " bp";
+}
+
+// Panel hits per SV row as "GENE (side, how)" labels, mirroring sv_panel_hits() in R/parse_severus.R (windows, symbol-only fallback, " [name]" suffix with several panels)
+function svPanelHits(row, cols) {
+  const defs = activePanelDefs();
+  if (!defs.length) return [];
+  const tagged = defs.length > 1;
+  const out = [];
+  defs.forEach(function (p) {
+    const tag = tagged ? " [" + p.name + "]" : "";
+    onePanelHits(row, cols, p).forEach(function (lab) {
+      if (out.indexOf(lab + tag) < 0) out.push(lab + tag);
+    });
+  });
+  return out;
+}
+
+function onePanelHits(row, cols, p) {
+  const at = function (n) { return (cols && cols[n] !== undefined) ? row[cols[n]] : undefined; };
+
+  if (!p.hasCoords) {
+    // A VEP symbol sits on the breakend itself, so a symbol hit is always direct.
+    const out = [];
+    [["gene_a", "A"], ["gene_b", "B"]].forEach(function (side) {
+      const hit = splitGenes(at(side[0])).filter(function (g) { return p.symbols.has(g); });
+      if (hit.length) out.push(hit.join(",") + " (" + side[1] + ", direct)");
+    });
+    return out;
+  }
+
+  const isBnd = BND_SVTYPES.indexOf(String(at("svtype"))) >= 0;
+  const ca = at("chrom_a"), cb = at("chrom_b");
+  const pa = Number(at("pos_a")), pb = Number(at("pos_b"));
+  // [chrom, windowStart, windowEnd, side, locusLo, locusHi]; the last two are the unpadded locus
+  const q = [];
+  if (isBnd) {
+    if (ca && isFinite(pa)) q.push([ca, pa - SV_PANEL_WINDOW_BND, pa + SV_PANEL_WINDOW_BND, "A", pa, pa]);
+    if (cb && isFinite(pb)) q.push([cb, pb - SV_PANEL_WINDOW_BND, pb + SV_PANEL_WINDOW_BND, "B", pb, pb]);
+  } else if (ca && isFinite(pa)) {
+    const lo = isFinite(pb) ? Math.min(pa, pb) : pa;
+    const hi = isFinite(pb) ? Math.max(pa, pb) : pa;
+    q.push([ca, lo - SV_PANEL_WINDOW_OTHER, hi + SV_PANEL_WINDOW_OTHER, "span", lo, hi]);
+  }
+
+  const out = [];
+  p.intervals.forEach(function (iv) {
+    q.forEach(function (w) {
+      if (iv[0] === w[0] && iv[1] <= w[2] && iv[2] >= w[1]) {
+        const gap = Math.max(0, iv[1] - w[5], w[4] - iv[2]);
+        const label = iv[3] + " (" + w[3] + ", " + (gap === 0 ? "direct" : fmtBp(gap)) + ")";
+        if (out.indexOf(label) < 0) out.push(label);
+      }
+    });
+  });
+  return out;
+}
+
+// Small variants match on gene symbol in both panel modes
+function snvPanelHit(symbolCell) {
+  const defs = activePanelDefs();
+  if (!defs.length) return true;
+  const genes = splitGenes(symbolCell);
+  return defs.some(function (p) {
+    return genes.some(function (g) { return p.symbols.has(g); });
+  });
+}
+
+window.activePanelDefs = activePanelDefs;
+window.svPanelHits     = svPanelHits;
+window.svPanelHitLabel = function (row, cols) { return svPanelHits(row, cols).join(", "); };
+window.snvPanelHit     = snvPanelHit;
+)----")
+cat("</script>\n")
+```
+
+{{< include sections/_header.qmd >}}
+
+{{< include sections/_circos.qmd >}}
+
+{{< include sections/_ascat.qmd >}}
+
+{{< include sections/_gene_filter.qmd >}}
+
+{{< include sections/_smallvariants.qmd >}}
+
+{{< include sections/_sv.qmd >}}
+
+{{< include sections/_qc.qmd >}}
+
+*Report generated `r format(Sys.time(), "%Y-%m-%d %H:%M")` · LRSomatic report v1.3.1*
+
+```{=html}
+<script>
+(function () {
+  // Panel state, predicates and column maps live outside this block so the panel_hit renderer can use them first
+  const state = window.svPanelState;
+
+  $.fn.dataTable.ext.search.push(function (settings, searchData, index, rowData) {
+    const node = settings.nTable;
+    if (node !== window.snvTableElem && node !== window.svTableElem) return true;
+    // No panel ticked is the unfiltered state.
+    if (!state.panels || !state.panels.length) return true;
+
+    // rowData carries typed values; positions must compare as numbers
+    const row = rowData || searchData;
+
+    if (node === window.snvTableElem) {
+      const cols = window.SNV_COLS || {};
+      const idx  = cols["symbol"] !== undefined ? cols["symbol"] : 0;
+      return window.snvPanelHit(row[idx]);
+    }
+    return window.svPanelHits(row, window.SV_COLS).length > 0;
+  });
+
+  function parseCustomGenes(text) {
+    return new Set(
+      text.split(/[\s,\n]+/).map(g => g.trim().toUpperCase()).filter(g => g.length > 0)
+    );
+  }
+
+  function updateCount() {
+    const parts = [];
+    if (window.snvTableElem) {
+      const n = $(window.snvTableElem).DataTable().rows({ search: "applied" }).count();
+      parts.push(n + " small variant" + (n === 1 ? "" : "s"));
+    }
+    if (window.svTableElem) {
+      const n = $(window.svTableElem).DataTable().rows({ search: "applied" }).count();
+      parts.push(n + " SV" + (n === 1 ? "" : "s"));
+    }
+    const el = document.getElementById("panel-variant-count");
+    if (el) el.textContent = parts.length ? parts.join(" · ") + " shown" : "";
+  }
+
+  // Which panels are ticked, in the order they appear in the chip row.
+  function readCheckboxes() {
+    return $(".panel-checkbox:checked").map(function () { return this.value; }).get();
+  }
+
+  // Chips and the custom textarea follow the checkboxes, not the other way round
+  function syncControls() {
+    $(".panel-checkbox").each(function () {
+      $(this).closest(".panel-toggle").toggleClass("is-on", this.checked);
+    });
+    $("#custom-gene-panel").toggle(state.panels.indexOf("__custom__") >= 0);
+    if (window.updatePanelNotes) window.updatePanelNotes();
+  }
+
+  function redraw() {
+    if (window.snvTableElem) $(window.snvTableElem).DataTable().draw();
+    if (window.svTableElem)  $(window.svTableElem).DataTable().draw();
+    updateCount();
+    // Paint the breakend circos once before any filter; its draw.dt handler covers the rest
+    if (window.bndSyncFilter) window.bndSyncFilter();
+  }
+
+  $(document).ready(function () {
+    // The count follows any draw of either table (search boxes and dropdowns redraw directly)
+    $(document).on("draw.dt", function (e) {
+      if (e.target === window.snvTableElem || e.target === window.svTableElem) updateCount();
+    });
+
+    $(".panel-checkbox").on("change", function () {
+      state.panels = readCheckboxes();
+      syncControls();
+      redraw();
+    });
+
+    $("#panel-clear").on("click", function () {
+      $(".panel-checkbox").prop("checked", false);
+      state.panels = [];
+      syncControls();
+      redraw();
+    });
+
+    // Adopt the load-time `checked` attributes rather than assuming DEFAULT_PANELS matches
+    state.panels = readCheckboxes();
+    syncControls();
+
+    let debounceTimer;
+    $("#custom-gene-input").on("input", function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function () {
+        state.customGenes = parseCustomGenes(document.getElementById("custom-gene-input").value);
+        redraw();
+      }, 300);
+    });
+
+    let _waitAttempts = 0;
+    const waitForTables = setInterval(function () {
+      if (window.snvTableElem || window.svTableElem) {
+        clearInterval(waitForTables);
+        redraw();
+      } else if (++_waitAttempts > 100) {
+        clearInterval(waitForTables);
+      }
+    }, 100);
+  });
+})();
+</script>
+```
+
+```{r facet-filter-js, results='asis'}
+# Tickbox column filters, inlined from facet_filter.js (lintable JS, self-contained report); reads window.*_FACETS / *_COLS when a table announces itself
+cat("<script>\n")
+cat(readLines(file.path(params$repo_dir, "assets/js/facet_filter.js")), sep = "\n")
+cat("\n</script>\n")
+```
