@@ -1,0 +1,98 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "lrsomaticreport"
+description: Render a self-contained per-sample HTML report (circos plot, small/structural variant tables, ASCAT copy-number, QC) from the pipeline's key final outputs, using the lrsomatic_report R/Quarto tool.
+keywords:
+  - report
+  - quarto
+  - somatic
+  - long-read
+tools:
+  - "lrsomatic_report":
+      description: "Standalone R/Quarto reporting tool for the LRSomatic pipeline"
+      homepage: "https://github.com/ljwharbers/lrsomatic_report"
+      documentation: "https://github.com/ljwharbers/lrsomatic_report/blob/main/README.md"
+      tool_dev_url: "https://github.com/ljwharbers/lrsomatic_report"
+      doi: ""
+      licence: ["MIT"]
+      identifier: ""
+
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information, e.g. `[ id:'sample1' ]`
+    - vep_somatic:
+        type: file
+        description: VEP-annotated somatic small-variant VCF (SOMATIC_VEP output), or `[]` if VEP was skipped
+        pattern: "*_SOMATIC_VEP.vcf.gz"
+    - sv_vep:
+        type: file
+        description: VEP-annotated structural-variant VCF (SV_VEP output); the report's primary SV annotation source, or `[]` if VEP was skipped
+        pattern: "*_SV_VEP.vcf.gz"
+    - severus_vcf:
+        type: file
+        description: Severus somatic structural-variant VCF (raw breakpoints, used for the circos tracks), or `[]` if not available
+        pattern: "severus_somatic.vcf.gz"
+    - somatic_vcf:
+        type: file
+        description: Phased somatic small-variant VCF (the VCF that VEP annotated); source of the VAF, depth and phase-set columns, or `[]` if not available
+        pattern: "*.vcf.gz"
+    - ascat_files:
+        type: file
+        description: Collected ASCAT copy-number output files (segments_raw, purityploidy, diagnostic PNGs), or `[]` if ASCAT was skipped
+    - qc_tumor_files:
+        type: file
+        description: Collected tumor QC files (mosdepth summary/dist, cramino, samtools stats/flagstat), or `[]` if QC was skipped
+    - qc_normal_files:
+        type: file
+        description: Collected normal-sample QC files (matched mode only), or `[]` for tumor-only samples or if QC was skipped
+    - wakhan_files:
+        type: file
+        description: Collected Wakhan outputs (solutions_ranks.tsv, the ploidy/purity heatmap HTML and the per-solution `solution_<rank>/` directories), or `[]` if Wakhan was skipped
+  - - report_src:
+        type: directory
+        description: lrsomatic_report source tree (bin/, R/, templates/, assets/), shared across all samples; defaults to the vendored copy at `assets/lrsomatic_report`
+  - - gene_panels:
+        type: file
+        description: Optional user-supplied gene panel TSVs (each with a `gene` column) to apply on load, staged into `gene_panels/` so they are bound into the container; `[]` when `--report_gene_panel` names only builtin panels or is unset. Several panels can be active at once and are unioned. Panel files sharing a base name cannot be combined
+        pattern: "*.tsv"
+
+output:
+  report:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information, e.g. `[ id:'sample1' ]`
+      - "*_report.html":
+          type: file
+          description: Self-contained per-sample HTML report
+          pattern: "*_report.html"
+  versions_lrsomaticreport:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "lrsomatic_report":
+          type: string
+          description: The name of the tool
+      - "1.3.2":
+          type: string
+          description: |
+            Manually pinned version (the tool has no CLI version flag); matches the
+            vendored release recorded in assets/lrsomatic_report/VENDORED.md
+
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - lrsomatic_report:
+          type: string
+          description: The name of the tool
+      - "1.3.2":
+          type: string
+          description: Manually pinned version (tool has no CLI version flag)
+
+authors:
+  - "@ljwharbers"
+maintainers:
+  - "@ljwharbers"

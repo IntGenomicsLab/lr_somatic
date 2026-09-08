@@ -1,0 +1,170 @@
+nextflow_process {
+
+    name "Test Process LRSOMATICREPORT"
+    script "../main.nf"
+    process "LRSOMATICREPORT"
+
+    tag "modules"
+    tag "modules_local"
+    tag "lrsomaticreport"
+
+    test("no optional inputs - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test', paired_data: null, sex: 'male' ],
+                    [], // vep_somatic
+                    [], // sv_vep
+                    [], // severus_vcf
+                    [], // somatic_vcf
+                    [], // ascat_files
+                    [], // qc_tumor_files
+                    [], // qc_normal_files
+                    []  // wakhan_files
+                ]
+                input[1] = file("${projectDir}/assets/lrsomatic_report", checkIfExists: true)
+                input[2] = [] // gene_panels
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assertAll(
+                { assert snapshot(process.out).match() }
+            )
+        }
+
+    }
+
+    // Renders for real (no -stub), so a broken container, an incomplete vendored tool tree
+    // or CLI drift against render_report.R is caught
+    test("vep somatic vcf - real render") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test', paired_data: null, sex: 'male' ],
+                    file("${projectDir}/modules/local/lrsomaticreport/tests/test_SOMATIC_VEP.vcf.gz", checkIfExists: true),
+                    [], // sv_vep
+                    [], // severus_vcf
+                    [], // somatic_vcf
+                    [], // ascat_files
+                    [], // qc_tumor_files
+                    [], // qc_normal_files
+                    []  // wakhan_files
+                ]
+                input[1] = file("${projectDir}/assets/lrsomatic_report", checkIfExists: true)
+                input[2] = [] // gene_panels
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assertAll(
+                { assert process.out.report.get(0).get(1).endsWith("test_report.html") },
+                // The rendered HTML is not snapshotted (Quarto embeds timestamps and
+                // per-render element ids); assert on content that must be there instead.
+                { assert path(process.out.report.get(0).get(1)).readLines().size() > 0 },
+                { assert path(process.out.report.get(0).get(1)).text.contains("TP53") },
+                { assert snapshot(process.out.versions_lrsomaticreport).match("versions") }
+            )
+        }
+
+    }
+
+    // A user-supplied panel TSV lives outside the task work dir, so it only reaches
+    // render_report.R if the `gene_panels` input stages it into the container
+    test("custom gene panel tsv - real render") {
+
+        config "./gene_panel.config"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test', paired_data: null, sex: 'male' ],
+                    file("${projectDir}/modules/local/lrsomaticreport/tests/test_SOMATIC_VEP.vcf.gz", checkIfExists: true),
+                    [], // sv_vep
+                    [], // severus_vcf
+                    [], // somatic_vcf
+                    [], // ascat_files
+                    [], // qc_tumor_files
+                    [], // qc_normal_files
+                    []  // wakhan_files
+                ]
+                input[1] = file("${projectDir}/assets/lrsomatic_report", checkIfExists: true)
+                input[2] = [ file("${projectDir}/modules/local/lrsomaticreport/tests/test_panel.tsv", checkIfExists: true) ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assertAll(
+                // The custom panel is registered alongside the builtins under its file
+                // base name, so its presence in the HTML proves the TSV was read.
+                { assert path(process.out.report.get(0).get(1)).text.contains("test_panel") },
+                { assert path(process.out.report.get(0).get(1)).text.contains("TP53") }
+            )
+        }
+
+    }
+
+    // Two staged TSVs plus a builtin, covering the union path: each hit is labelled with the
+    // panel it came from, which only happens when more than one panel is active
+    test("several gene panels - real render") {
+
+        config "./multi_gene_panel.config"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test', paired_data: null, sex: 'male' ],
+                    file("${projectDir}/modules/local/lrsomaticreport/tests/test_SOMATIC_VEP.vcf.gz", checkIfExists: true),
+                    [], // sv_vep
+                    [], // severus_vcf
+                    [], // somatic_vcf
+                    [], // ascat_files
+                    [], // qc_tumor_files
+                    [], // qc_normal_files
+                    []  // wakhan_files
+                ]
+                input[1] = file("${projectDir}/assets/lrsomatic_report", checkIfExists: true)
+                input[2] = [
+                    file("${projectDir}/modules/local/lrsomaticreport/tests/test_panel.tsv", checkIfExists: true),
+                    file("${projectDir}/modules/local/lrsomaticreport/tests/test_panel_b.tsv", checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            def report_text = path(process.out.report.get(0).get(1)).text
+            // Had only the last --gene-panel flag survived, this would name a single panel
+            def matcher = (report_text =~ /const DEFAULT_PANELS = (\[[^\]]*\])/)
+            assert matcher.find()
+            def default_panels = matcher.group(1)
+            assertAll(
+                { assert default_panels.contains("test_panel") },
+                { assert default_panels.contains("test_panel_b") },
+                { assert default_panels.contains("lymphoid") },
+                // SMAD4 and VHL appear in no builtin panel, so their presence proves
+                // test_panel_b was read off disk rather than merely named.
+                { assert report_text.contains("SMAD4") },
+                { assert report_text.contains("VHL") },
+                { assert report_text.contains("TP53") }
+            )
+        }
+
+    }
+
+}

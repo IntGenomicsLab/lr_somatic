@@ -1,0 +1,76 @@
+## Circos overview
+
+```{r circos-plot, fig.align='center'}
+#| echo: false
+if (!is.null(circos_tmp) && file.exists(circos_tmp)) {
+
+  img_b64 = base64enc::base64encode(circos_tmp)
+
+  # HTML legend — four groups, swatches use --circos-* CSS vars
+  snv_items = list(
+    list(label = "C→A", var = "--circos-snv-ca"),
+    list(label = "C→G", var = "--circos-snv-cg"),
+    list(label = "C→T", var = "--circos-snv-ct"),
+    list(label = "T→A", var = "--circos-snv-ta"),
+    list(label = "T→C", var = "--circos-snv-tc"),
+    list(label = "T→G", var = "--circos-snv-tg")
+  )
+  sv_items = list(
+    list(label = "INS", var = "--circos-sv-ins"),
+    list(label = "DEL", var = "--circos-sv-del"),
+    list(label = "INV", var = "--circos-sv-inv"),
+    list(label = "DUP", var = "--circos-sv-dup")
+  )
+  cnv_items = list(
+    list(label = "Major", var = "--circos-cnv-major"),
+    list(label = "Minor", var = "--circos-cnv-minor"),
+    list(label = "Total", var = "--circos-cnv-total")
+  )
+
+  make_items = function(items, swatch_type) {
+    lapply(items, function(x) {
+      tags$div(class = "circos-legend__item",
+        tags$span(class = paste0("circos-swatch--", swatch_type),
+                  style = paste0("--_swatch: var(", x$var, ")")),
+        x$label
+      )
+    })
+  }
+
+  # Plate and legend side by side (.circos-figure grid); the track order is the caption
+  tags$div(class = "circos-figure",
+    tags$figure(class = "circos-container",
+      tags$img(src   = paste0("data:image/svg+xml;base64,", img_b64),
+               style = "max-width:680px; display:block; margin:auto;"),
+      tags$figcaption(class = "report-figure__caption",
+                      "Tracks, outer to inner: ideogram · SNV (SBS-6) · SV · copy number")
+    ),
+    tags$div(class = "circos-legend",
+      tags$div(class = "circos-legend__group",
+        tags$div(class = "circos-legend__title", "SNV type"),
+        make_items(snv_items, "dot")
+      ),
+      tags$div(class = "circos-legend__group",
+        tags$div(class = "circos-legend__title", "Structural variants"),
+        make_items(sv_items, "bar")
+      ),
+      tags$div(class = "circos-legend__group",
+        tags$div(class = "circos-legend__title", "Copy number"),
+        make_items(cnv_items, "bar")
+      ),
+      tags$div(class = "circos-legend__group",
+        tags$div(class = "circos-legend__title", "Translocation"),
+        tags$div(class = "circos-legend__item",
+          tags$span(class = "circos-swatch--arc",
+                    style = "--_swatch: var(--circos-bnd)"),
+          "BND link"
+        )
+      )
+    )
+  )
+
+} else {
+  section_notice(paste("Circos plot could not be generated. Check that ASCAT and Severus",
+                       "output files are present."), warn = TRUE)
+}
+```

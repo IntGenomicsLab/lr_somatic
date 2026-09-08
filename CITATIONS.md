@@ -50,6 +50,10 @@
 
   > Lin JH, Chen LC, Yu SC, Huang YT. LongPhase: an ultra-fast chromosome-scale phasing algorithm for small and large variants. Bioinformatics. 2022 Apr 28;38(9):2452-2455. doi: 10.1093/bioinformatics/btac126. PubMed PMID: 35253834; PubMed Central PMCID: PMC9048675.
 
+- [lrsomatic_report](https://github.com/ljwharbers/lrsomatic_report)
+
+  > Standalone R/Quarto reporting tool that renders the pipeline's final per-sample HTML report. https://github.com/ljwharbers/lrsomatic_report
+
 - [minimap2](https://pubmed.ncbi.nlm.nih.gov/29750242/)
 
   > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PubMed PMID: 29750242; PubMed Central PMCID: PMC6137996.

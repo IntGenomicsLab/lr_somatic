@@ -1,0 +1,74 @@
+## QC details
+
+::: {.callout-note collapse="true"}
+### Coverage summary
+
+```{r coverage-table}
+# The widget must be the chunk's value, not print()ed: under quarto_render() print.htmlwidget writes to a temp file and emits nothing
+cov_dt = function(x) DT::datatable(x, rownames = FALSE,
+                                   options = list(pageLength = 30, dom = "ft",
+                                                  scrollY = "300px"))
+show_normal_cov = outputs$has_normal && !is.null(qc_normal_mosdepth) && nrow(qc_normal_mosdepth$table) > 0
+have_cov = !is.null(qc_mosdepth$table) && nrow(qc_mosdepth$table) > 0
+
+htmltools::tagList(
+  if (show_normal_cov) tags$p(tags$strong("Tumour")),
+  if (have_cov) cov_dt(qc_mosdepth$table) else section_notice("Mosdepth summary not available."),
+  if (show_normal_cov) tags$p(tags$strong("Normal")),
+  if (show_normal_cov) cov_dt(qc_normal_mosdepth$table)
+)
+```
+:::
+
+::: {.callout-note collapse="true"}
+### Alignment statistics (samtools flagstat)
+
+```{r flagstat-table, results='asis'}
+show_normal_fs = outputs$has_normal && length(qc_normal_flagstat) > 0
+if (show_normal_fs) cat("**Tumour**\n\n")
+if (length(qc_flagstat) > 0) {
+  fs = data.frame(metric = names(qc_flagstat), value = unlist(qc_flagstat))
+  print(knitr::kable(fs, row.names = FALSE))
+} else {
+  cat("Flagstat file not available.\n")
+}
+if (show_normal_fs) {
+  cat("\n\n**Normal**\n\n")
+  fs_n = data.frame(metric = names(qc_normal_flagstat), value = unlist(qc_normal_flagstat))
+  print(knitr::kable(fs_n, row.names = FALSE))
+}
+```
+:::
+
+::: {.callout-note collapse="true"}
+### Read quality + alignment statistics
+
+```{r cramino-table, results='asis'}
+make_quality_df = function(cr, st) {
+  rows = list()
+  rows[["N50 (bp)"]]       = fmt_val(cr$n50, 0)
+  rows[["Yield (Gb)"]]     = fmt_val(cr$yield_gb)
+  rows[["% mapped"]]       = fmt_val(cr$mapped_pct)
+  rows[["# reads"]]        = fmt_val(cr$n_reads, 0)
+  if (!is.null(st)) {
+    rows[["Avg read length (bp)"]] = fmt_val(st$avg_length, 0)
+    rows[["Max read length (bp)"]] = fmt_val(st$max_length, 0)
+    rows[["Avg base quality"]]     = fmt_val(st$avg_quality)
+    rows[["Bases mapped (Gb)"]]    = fmt_val(st$bases_mapped / 1e9)
+    rows[["Error rate"]]           = if (!is.na(st$error_rate))
+      paste0(formatC(st$error_rate * 100, format = "f", digits = 3), "%") else "N/A"
+  }
+  data.frame(metric = names(rows), value = unlist(rows), row.names = NULL)
+}
+
+show_normal_cr = outputs$has_normal
+if (show_normal_cr) cat("**Tumour**\n\n")
+print(knitr::kable(make_quality_df(qc_cramino, samtools_stats), row.names = FALSE))
+if (show_normal_cr) {
+  cat("\n\n**Normal**\n\n")
+  print(knitr::kable(make_quality_df(qc_normal_cramino, qc_normal_samtools_stats), row.names = FALSE))
+}
+```
+:::
+
+{{< include sections/_whatshap.qmd >}}

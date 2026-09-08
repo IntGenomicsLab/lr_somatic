@@ -1,0 +1,60 @@
+## Gene panel filter
+
+```{r gene-filter-note}
+table_details(
+  summary = "What the panel filter applies to",
+  "Applies to both the small-variant and structural-variant tables below. Tick any number",
+  "of panels: a variant or SV is kept if it hits", tags$strong("any"), "of them, and with none",
+  "ticked the tables are unfiltered. Small variants match on gene symbol; SVs match on",
+  "breakend position when the panel carries coordinates — see the note under the SV table",
+  "for which mode each ticked panel is in.",
+  tags$br(),
+  "With more than one panel ticked, each panel_hit entry names the panel it matched in",
+  "square brackets.",
+  tags$br(),
+  "A custom list is bare symbols, which carry no coordinates, so its SVs are matched on",
+  "the annotated breakend genes only — no positional window."
+)
+```
+
+```{r gene-filter-ui, results='asis'}
+# One checkbox per registered panel; no box ticked is the unfiltered state; load-time ticks are params$default_panels
+all_p = if (!is.null(params$all_panels) && length(params$all_panels) > 0)
+          params$all_panels else list()
+selected = setdiff(as.character(unlist(params$default_panels)), "__all__")
+
+chip = function(value, label) {
+  paste0('  <label class="panel-toggle', if (value %in% selected) " is-on" else "", '">',
+         '<input type="checkbox" class="panel-checkbox" value="',
+         htmltools::htmlEscape(value, attribute = TRUE), '"',
+         if (value %in% selected) " checked" else "", '> ',
+         htmltools::htmlEscape(label), '</label>\n')
+}
+
+chips = ""
+for (nm in names(all_p)) {
+  label = paste0(toupper(substr(nm, 1, 1)), substr(nm, 2, nchar(nm)))
+  chips = paste0(chips, chip(nm, label))
+}
+chips = paste0(chips, chip("__custom__", "Custom…"))
+
+cat(paste0('
+<div class="panel-controls">
+  <span class="panel-controls__label">Gene panels:</span>
+  <div class="panel-controls__toggles">
+', chips, '  </div>
+  <button type="button" id="panel-clear" class="panel-controls__clear">Clear</button>
+  <!-- Unhidden by assets/js/facet_filter.js whenever a column tickbox filter is set. It
+       sits here rather than by the tables because with scrollY = "400px" a ticked filter
+       can be scrolled out of sight, and inside .panel-controls it inherits the print
+       hiding for free. It shares .panel-controls__clear with the panel Clear beside it —
+       two neutral secondary controls in one bar — so restyling one restyles both. -->
+  <button type="button" id="facet-clear" class="panel-controls__clear" hidden>Clear value filters</button>
+  <span id="panel-variant-count" class="panel-controls__count"></span>
+</div>
+<div id="custom-gene-panel" class="panel-controls__custom-area" style="display:none;">
+  <label>Custom genes — one per line, or comma/space separated, case-insensitive:</label>
+  <textarea id="custom-gene-input" rows="4"></textarea>
+</div>
+'))
+```

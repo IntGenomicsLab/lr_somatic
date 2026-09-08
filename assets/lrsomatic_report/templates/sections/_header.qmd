@@ -1,0 +1,82 @@
+```{r report-hero}
+mode_css = if (outputs$mode == "matched") "is-matched" else "is-tumour-only"
+tags$header(
+  class = "report-hero",
+  # No eyebrow: Quarto's own title line directly above already says what this document is.
+  div(class = "report-hero__title", params$sample_id),
+  div(class = "report-hero__badges",
+    tags$span(class = paste("report-badge", mode_css), toupper(outputs$mode)),
+    tags$span(class = "report-badge is-meta", toupper(params$reference)),
+    tags$span(class = "report-badge is-meta", toupper(params$sex))
+  )
+)
+```
+
+```{r summary-cards}
+fmt_val = function(x, digits = 2) {
+  if (is.na(x)) return("N/A")
+  if (is.numeric(x) && !is.integer(x)) return(round(x, digits))
+  as.character(x)
+}
+
+card = function(label, value, css_class = "", subtitle = NULL) {
+  div(
+    class = paste("metric-card", css_class),
+    div(class = "metric-card__label",    label),
+    div(class = "metric-card__value",    value),
+    if (!is.null(subtitle))
+      div(class = "metric-card__subtitle", subtitle)
+  )
+}
+
+# One HTML string, not nested tags: htmltools' newlines rendered the label as "SNV s"
+lc_plural = function(text) {
+  stopifnot(endsWith(text, "s"))
+  HTML(paste0(htmlEscape(substr(text, 1, nchar(text) - 1L)),
+              '<span class="lc">s</span>'))
+}
+
+# Three labelled groups instead of one grid of eleven numbers
+metric_group = function(title, ...) {
+  div(class = "metric-group",
+    div(class = "metric-group__title", title),
+    div(class = "metric-grid", ...)
+  )
+}
+
+div(class = "metric-groups",
+  metric_group("Tumour",
+    card("Purity",        fmt_val(ascat_pp$purity),            "metric-purity"),
+    card("Ploidy",        fmt_val(ascat_pp$ploidy),            "metric-ploidy"),
+    card("Coding TMB",
+         if (!is.na(tmb_info$tmb)) fmt_val(tmb_info$tmb) else "N/A",
+         "metric-tmb",
+         subtitle = if (!is.na(tmb_info$n_nonsyn))
+           paste0("mut/Mb · ", tmb_info$n_nonsyn, " non-syn / ", tmb_info$denominator_mb, " Mb")
+         else if (!is.na(tmb_info$tmb)) "mut/Mb" else NULL)
+  ),
+  metric_group("Somatic variants",
+    card(lc_plural("SNVs"),  fmt_val(n_snv, 0),         "metric-snvs"),
+    # One row per rearrangement, not per breakend record — see the note under the SV table.
+    card(lc_plural("SVs"),   fmt_val(n_sv, 0),          "metric-svs",
+         subtitle = if (!is.na(n_trans) && !is.na(n_intra_bnd))
+           paste0(n_trans, " interchrom · ", n_intra_bnd, " intrachrom BND") else NULL),
+    card("Panel variants",fmt_val(n_panel_vars, 0),            "metric-panel-vars"),
+    card(lc_plural("Panel SVs"),     fmt_val(n_panel_svs, 0),   "metric-panel-svs")
+  ),
+  metric_group("Sequencing",
+    card("Mean coverage", paste0(fmt_val(qc_mosdepth$mean_depth), "×"), "metric-coverage"),
+    card("Read N50",      if (!is.na(qc_cramino$n50)) fmt_bp(qc_cramino$n50) else "N/A", "metric-n50"),
+    card("Error rate",
+         if (!is.null(samtools_stats) && !is.na(samtools_stats$error_rate))
+           paste0(formatC(samtools_stats$error_rate * 100, format = "f", digits = 3), "%") else "N/A",
+         "metric-error"),
+    card("Phased variants",
+         { w = SECTION_DATA$whatshap$all
+           if (!is.null(w) && !is.na(w$phased_fraction))
+             paste0(fmt_val(w$phased_fraction * 100, 1), "%") else "N/A" },
+         "metric-phased",
+         subtitle = "germline, WhatsHap")
+  )
+)
+```

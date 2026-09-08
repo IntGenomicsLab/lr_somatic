@@ -155,6 +155,7 @@ For structural variants, the CHM13 panel of normals is a merged panel combining 
 | `--modkit_args`        | Additional arguments passed to `modkit pileup`. The default restricts output to 5mC calls at CpG sites; note that `--modified-bases` only filters the output, so PacBio positions where the 5mC and 5hmC probabilities sum above 1 are still dropped. Default = `--cpg --modified-bases 5mC` |
 | `--modkit_phased`      | A boolean to run `modkit pileup --phased` on the Longphase-haplotagged BAMs, producing `_hp1`, `_hp2` and `_combined` bedMethyl files per sample instead of a single unphased file. Default = `false`                                                                                        |
 | `--skip_whatshapstats` | A boolean to skip WhatsHap phasing statistics. Default = `false`                                                                                                                                                                                                                             |
+| `--skip_report`        | A boolean to skip the final per-sample HTML report. Default = `false`                                                                                                                                                                                                                        |
 
 #### LONGPHASE options:
 
@@ -211,6 +212,73 @@ For structural variants, the CHM13 panel of normals is a merged panel combining 
 | Parameter              | Description                                                                          |
 | ---------------------- | ------------------------------------------------------------------------------------ |
 | `--severus_minsupport` | Minimum number of supporting reads required for SEVERUS to call an SV. Default = `3` |
+
+#### Report Options
+
+| Parameter             | Description                                                                                                                                                                                                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--report_src`        | Override the report tool source tree (bin/, R/, templates/, assets/). Not needed for normal runs: a copy of [lrsomatic_report](https://github.com/ljwharbers/lrsomatic_report) ships inside the pipeline. Point it at a local checkout to render with an unreleased version of the tool. Default = `${projectDir}/assets/lrsomatic_report` |
+| `--report_gene_panel` | Gene panel(s) applied when the report opens, as a comma-separated list. Each entry is `none` (no filtering), a builtin panel name (`lymphoid` or `sarcoma`), or a path to a TSV file with a `gene` column. Default = `null`, i.e. unfiltered                                                                                               |
+
+Gene panel filtering is a view, not a filter on the data: every builtin panel is embedded in
+the rendered report and the reader can tick and untick them (or clear them all for the
+unfiltered table) in the browser. `--report_gene_panel` only decides which ones are ticked on
+load. A custom panel is a tab-separated file with a header row containing at least a `gene`
+column:
+
+```tsv
+gene	panel	note
+TP53	mypanel	Tumour suppressor
+KRAS	mypanel	Oncogene
+```
+
+A panel may also carry `chrom`, `start` and `end` columns — all three or none. With
+coordinates, structural variants are matched on position (within 1 Mb of a breakend, or
+100 kb of the SV span) rather than on the VEP gene symbol, which is what makes breakend
+filtering reliable: whether a breakend carries a gene symbol at all depends on the VEP
+invocation. A coordinate-carrying panel must declare the reference its coordinates are
+valid for, either as a leading `# reference: hg38` comment or as a `reference` column; a
+panel declaring a reference other than the one the sample was called against is a hard
+error rather than a silently wrong filter. Symbol-only panels need no declaration. The
+builtin panels ship one file per reference and are selected by their bare name
+(`lymphoid`, `sarcoma`), resolved against the detected reference.
+
+```bash
+nextflow run IntGenomicsLab/lrsomatic \
+    -profile <docker/singularity> \
+    --input samplesheet.csv \
+    --outdir results \
+    --report_gene_panel /path/to/mypanel.tsv
+```
+
+##### Applying several panels at once
+
+Pass a comma-separated list to open the report with several panels applied. They are
+**unioned**: a variant or SV is kept if it hits any of them. Builtin names and custom paths
+can be mixed freely.
+
+```bash
+    --report_gene_panel lymphoid,sarcoma
+    --report_gene_panel 'lymphoid,/path/to/mypanel.tsv'
+```
+
+With two or more panels active, each `panel_hit` entry in the SV table gains a trailing
+`[panel]` naming which one matched — under a union that is all that distinguishes two hits
+on the same gene. With a single panel the labels read exactly as they always have.
+
+An entry is read as a panel **file** if it contains a `/` or ends in `.tsv`, and as a
+builtin panel name otherwise. In practice that means a custom panel needs a path or a
+`.tsv` name — `--report_gene_panel mypanel` is looked up as a builtin even if a file called
+`mypanel` sits next to you.
+
+Three things are checked before the run starts, so a mistake costs seconds rather than a
+full pipeline:
+
+- `none` means unfiltered and cannot be combined with a real panel.
+- A panel file that does not exist, and a builtin name that is not one of the bundled
+  panels, are both errors — a typo cannot quietly produce an unfiltered report.
+- Two panel files sharing a base name cannot be combined, whatever directories they live
+  in — they are staged side by side and would collide. Rename one.
 
 #### WAKHAN Options
 
@@ -318,7 +386,7 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 - `apptainer`
   - A generic configuration profile to be used with [Apptainer](https://apptainer.org/)
 - `wave`
-  - A generic configuration profile to enable [Wave](https://seqera.io/wave/) containers. Use together with one of the above (requires Nextflow ` 24.03.0-edge` or later).
+  - A generic configuration profile to enable [Wave](https://seqera.io/wave/) containers. Use together with one of the above (requires Nextflow `24.03.0-edge` or later).
 - `conda`
   - A generic configuration profile to be used with [Conda](https://conda.io/docs/). Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker, Singularity, Podman, Shifter, Charliecloud, or Apptainer.
 

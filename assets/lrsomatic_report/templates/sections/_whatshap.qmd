@@ -1,0 +1,50 @@
+::: {.callout-note collapse="true"}
+### Phasing
+
+```{r whatshap-info}
+whatshap = SECTION_DATA[["whatshap"]]
+if (is.null(whatshap)) {
+  section_notice("WhatsHap phasing statistics not found.")
+}
+```
+
+```{r whatshap-table}
+if (!is.null(whatshap) && nrow(whatshap$per_chrom) > 0) {
+  show_cols = c("chromosome", "variants", "heterozygous_variants", "phased", "unphased",
+                "singletons", "blocks", "phased_fraction", "bp_per_block_median",
+                "block_n50")
+  show_cols = show_cols[show_cols %in% names(whatshap$per_chrom)]
+
+  wt = whatshap$per_chrom[, ..show_cols]
+  if ("phased_fraction" %in% names(wt)) {
+    wt[, phased_fraction := round(phased_fraction * 100, 1)]
+    setnames(wt, "phased_fraction", "phased%")
+  }
+
+  htmltools::tagList(
+    DT::datatable(
+      wt,
+      rownames    = FALSE,
+      filter      = "top",
+      extensions  = c("Buttons", "Scroller"),
+      options     = list(
+        dom         = "Bfrtip",
+        buttons     = c("copy", "csv"),
+        scrollX     = TRUE,
+        scrollY     = "350px",
+        scroller    = TRUE,
+        deferRender = TRUE,
+        pageLength  = 25,
+        columnDefs  = list(list(className = "dt-left", targets = "_all"))
+      )
+    ),
+    # Germline, not somatic, statistics; see table_details() in R/sections.R
+    table_details(
+      summary = "Source",
+      sprintf("Germline phasing statistics, from %s.",
+              if (!is.na(whatshap$vcf)) whatshap$vcf else "the phased germline VCF")
+    )
+  )
+}
+```
+:::

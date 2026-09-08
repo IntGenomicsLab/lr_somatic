@@ -139,6 +139,15 @@ nextflow_pipeline {
                     }
                 },
 
+                // ── sample4: merged BAM content ──────────────────────────────
+                {
+                    // sample4's merged BAM has an unstable md5 (see tests/.nftignore), so
+                    // assert the reads instead
+                    assert snapshot(
+                        bam("$launchDir/output/sample4/bamfiles/sample4_tumor.bam", stringency: 'silent').getReadsMD5()
+                    ).match("sample4_merged_reads")
+                },
+
                 // ── Snapshot ─────────────────────────────────────────────────
                 { assert snapshot(
                     removeNextflowVersion("$outputDir/pipeline_info/lrsomatic_software_mqc_versions.yml"),

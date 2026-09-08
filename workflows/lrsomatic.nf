@@ -9,6 +9,8 @@ include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pi
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_lrsomatic_pipeline'
 include { getGenomeAttribute     } from '../subworkflows/local/utils_nfcore_lrsomatic_pipeline'
+include { reportGenePanelTokens  } from '../subworkflows/local/utils_nfcore_lrsomatic_pipeline'
+include { reportGenePanelIsFile  } from '../subworkflows/local/utils_nfcore_lrsomatic_pipeline'
 
 //
 // IMPORT MODULES
@@ -26,6 +28,7 @@ include { ASCAT                             } from '../modules/nf-core/ascat/mai
 include { SEVERUS                           } from '../modules/nf-core/severus/main.nf'
 include { METAEXTRACT                       } from '../modules/local/metaextract/main'
 include { WAKHAN                            } from '../modules/local/wakhan/main'
+include { LRSOMATICREPORT                   } from '../modules/local/lrsomaticreport/main'
 include { FIBERTOOLSRS_PREDICTM6A           } from '../modules/local/fibertoolsrs/predictm6a'
 include { FIBERTOOLSRS_FIRE                 } from '../modules/local/fibertoolsrs/fire'
 include { FIBERTOOLSRS_NUCLEOSOMES          } from '../modules/local/fibertoolsrs/nucleosomes'
@@ -532,8 +535,8 @@ workflow LRSOMATIC {
 
     ch_index_minimap
         .branch { meta, _bams, _bais ->
-                paired: meta.paired_data       // meta.paired_data is the normal sample ID for tumors, or the tumor ID for normals
-                tumor_only: !meta.paired_data  // meta.paired_data is null/false for tumor-only samples
+                paired: meta.paired_data
+                tumor_only: !meta.paired_data
         }
         .set { branched_minimap }
 
@@ -709,6 +712,8 @@ workflow LRSOMATIC {
 
     }
 
+    ch_somatic_vep_vcf = channel.empty()
+
     if (!params.skip_vep) {
 
         //
@@ -759,6 +764,8 @@ workflow LRSOMATIC {
             vep_custom,
             vep_custom_tbi
         )
+
+        ch_somatic_vep_vcf = SOMATIC_VEP.out.vcf
     }
 
     // Build SEVERUS input by combining tumor-only and T/N paired samples with phased germline VCFs
@@ -811,6 +818,8 @@ workflow LRSOMATIC {
         .set { sv_vep }
     // sv_vep: [meta, severus_all_vcf, []]  -- all SVs ready for VEP annotation
 
+    ch_sv_vep_vcf = channel.empty()
+
     if(!params.skip_vep) {
         //
         // MODULE: SV_VEP (ENSEMBLVEP_VEP alias; label: process_medium)
@@ -828,10 +837,13 @@ workflow LRSOMATIC {
             vep_custom,
             vep_custom_tbi
         )
+
+        ch_sv_vep_vcf = SV_VEP.out.vcf
     }
 
 
     ch_nanoplot_post_txt = channel.empty()
+    ch_cramino_post_txt = channel.empty()
 
 
     if (!params.skip_qc && !params.skip_cramino) {
@@ -843,6 +855,8 @@ workflow LRSOMATIC {
         //
 
         CRAMINO_POST ( ch_minimap_bam )
+
+        ch_cramino_post_txt = CRAMINO_POST.out.txt
 
         if (!params.skip_nanoplot) {
 
@@ -921,6 +935,8 @@ workflow LRSOMATIC {
     // Output: .png plots, .segments, .purity_ploidy  -- copy number results
     //
 
+    ch_ascat_files = channel.empty()
+
     if (!params.skip_ascat) {
         // ASCAT expects [normal, tumor] order; rearrange from severus_input [tumor, normal] order
         severus_input
@@ -942,6 +958,14 @@ workflow LRSOMATIC {
         )
 
         ch_versions = ch_versions.mix(ASCAT.out.versions)
+
+        // Collect all ASCAT copy-number files (segments_raw, purityploidy, diagnostic PNGs) per sample
+        // for the final report module -- it globs by suffix, so exact grouping doesn't matter.
+        ch_ascat_files = ASCAT.out.segments_raw
+            .mix(ASCAT.out.purityploidy, ASCAT.out.png)
+            .groupTuple()
+            .map { meta, files -> [meta, files.flatten()] }
+        // ch_ascat_files: [meta, [file, file, ...]]
     }
 
     //
@@ -952,6 +976,8 @@ workflow LRSOMATIC {
     //         centromere_bed    -- BED file of centromere coordinates (for assembly anchoring)
     // Output: WAKHAN assembly reports (written to outdir)
     //
+
+    ch_wakhan_files = channel.empty()
 
     if (!params.skip_wakhan) {
 
@@ -969,6 +995,108 @@ workflow LRSOMATIC {
             wakhan_input,
             ch_fasta,
             file(params.centromere_bed)
+        )
+
+        // The subset of WAKHAN's outputs the report renders: the ranked purity/ploidy
+        // solutions, the ploidy/purity heatmap and each solution's plot directory
+        ch_wakhan_files = WAKHAN.out.solutions_ranks
+            .mix(WAKHAN.out.heatmap_html, WAKHAN.out.solution_dirs)
+            .groupTuple()
+            .map { meta, files -> [meta, files.flatten()] }  // solution_dirs contributes a list
+        // ch_wakhan_files: [meta, [file_or_dir, ...]]
+    }
+
+    //
+    // MODULE: LRSOMATICREPORT (final per-sample HTML report; every input is optional, so the joins use `remainder: true` keyed on the tumor sample id)
+    //
+
+    if (!params.skip_report) {
+
+        // Report identity: the tumor sample's id, carrying the meta to attach to the module call
+        severus_input
+            .map { meta, _tumor_bam, _tumor_bai, _normal_bam, _normal_bai, _phased_vcf, _phased_tbi ->
+                return [meta.id, meta]
+            }
+            .set { report_id_meta }
+        // report_id_meta: [id, meta]
+
+        ch_somatic_vep_vcf
+            .map { meta, vcf -> [meta.id, vcf] }
+            .set { report_vep_ch }
+
+        ch_sv_vep_vcf
+            .map { meta, vcf -> [meta.id, vcf] }
+            .set { report_sv_vep_ch }
+
+        SEVERUS.out.somatic_vcf
+            .map { meta, vcf -> [meta.id, vcf] }
+            .set { report_severus_ch }
+
+        PHASING_HAPLOTYPING.out.phased_somatic_vcf
+            .map { meta, vcf, _tbi -> [meta.id, vcf] }
+            .set { report_somatic_ch }
+
+        ch_ascat_files
+            .map { meta, files -> [meta.id, files] }
+            .set { report_ascat_ch }
+
+        ch_wakhan_files
+            .map { meta, files -> [meta.id, files] }
+            .set { report_wakhan_ch }
+
+        // Tumor-side QC: keyed by the sample's own id, which for tumor rows is already the report id
+        ch_mosdepth_summary
+            .mix(ch_mosdepth_global, ch_cramino_post_txt, ch_bam_stats, ch_bam_flagstat)
+            .filter { meta, _f -> meta.type == 'tumor' }
+            .map { meta, f -> [meta.id, f] }
+            .groupTuple()
+            .set { report_qc_tumor_ch }
+
+        // Normal-side QC (matched mode only): both rows of a pair share meta.id, so this is
+        // already keyed by the report id
+        ch_mosdepth_summary
+            .mix(ch_mosdepth_global, ch_cramino_post_txt, ch_bam_stats, ch_bam_flagstat)
+            .filter { meta, _f -> meta.type == 'normal' }
+            .map { meta, f -> [meta.id, f] }
+            .groupTuple()
+            .set { report_qc_normal_ch }
+
+        report_id_meta
+            .join(report_vep_ch,        remainder: true)
+            .join(report_sv_vep_ch,     remainder: true)
+            .join(report_severus_ch,    remainder: true)
+            .join(report_somatic_ch,    remainder: true)
+            .join(report_ascat_ch,      remainder: true)
+            .join(report_qc_tumor_ch,   remainder: true)
+            .join(report_qc_normal_ch,  remainder: true)
+            .join(report_wakhan_ch,     remainder: true)
+            .filter { _id, meta, _vep, _sv_vep, _severus, _somatic, _ascat, _qc_t, _qc_n, _wakhan -> meta != null }
+            .map { _id, meta, vep, sv_vep_vcf, severus, somatic, ascat, qc_t, qc_n, wakhan ->
+                return [
+                    meta,
+                    vep        ?: [],
+                    sv_vep_vcf ?: [],
+                    severus    ?: [],
+                    somatic    ?: [],
+                    ascat      ?: [],
+                    qc_t       ?: [],
+                    qc_n       ?: [],
+                    wakhan     ?: []
+                ]
+            }
+            .set { report_input_ch }
+        // report_input_ch: [meta, vep_somatic, sv_vep, severus_vcf, somatic_vcf, ascat_files, qc_tumor_files, qc_normal_files, wakhan_files]
+
+        // Only panel files need staging, so they are bound into the container; builtin names
+        // reach the tool through ext.args alone -- see conf/modules.config
+        def report_gene_panel_files = reportGenePanelTokens(params.report_gene_panel)
+            .findAll { tok -> reportGenePanelIsFile(tok) }
+            .collect { tok -> file(tok, checkIfExists: true) }
+
+        LRSOMATICREPORT (
+            report_input_ch,
+            file(params.report_src, checkIfExists: true),
+            report_gene_panel_files
         )
     }
 

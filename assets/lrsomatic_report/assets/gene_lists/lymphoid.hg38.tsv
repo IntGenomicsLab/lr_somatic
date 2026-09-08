@@ -1,0 +1,76 @@
+# reference: hg38
+# gene spans from gencode.v46.basic.annotation.gtf.gz
+# coordinates are 1-based inclusive gene spans; only valid for the reference declared above
+gene	chrom	start	end	panel	notes
+TNFRSF14	chr1	2555639	2565382	lymphoid	Immune checkpoint; FL
+PIK3CD	chr1	9629889	9729114	lymphoid	PI3K catalytic subunit delta
+SPEN	chr1	15836095	15940456	lymphoid	Transcriptional repressor
+ID3	chr1	23557926	23559501	lymphoid	BL; inhibits E-proteins/TCF3
+ARID1A	chr1	26693236	26782104	lymphoid	SWI/SNF chromatin remodeling
+BCL10	chr1	85265776	85276632	lymphoid	CBM complex; NF-kB
+NRAS	chr1	114704469	114716771	lymphoid	RAS signaling
+CD58	chr1	116514534	116571039	lymphoid	Immune evasion
+PTEN	chr10	87862638	87971930	lymphoid	PI3K pathway tumour suppressor
+MS4A1	chr11	60455846	60470752	lymphoid	CD20; B-cell surface marker; rituximab target
+CCND1	chr11	69641156	69654474	lymphoid	Cyclin D1; t(11;14) in MCL
+FAT3	chr11	92224818	92896473	lymphoid	Tumour suppressor
+BIRC3	chr11	102317484	102339403	lymphoid	IAP; NF-kB; CLL
+ATM	chr11	108222804	108369102	lymphoid	DNA damage response; CLL/MCL
+KRAS	chr12	25205246	25250936	lymphoid	RAS signaling
+KMT2D	chr12	49018975	49060794	lymphoid	Histone methyltransferase (MLL4)
+BTG1	chr12	92140278	92145846	lymphoid	Anti-proliferative; DLBCL
+DTX1	chr12	113056730	113098028	lymphoid	Notch pathway effector
+FOXO1	chr13	40555667	40666641	lymphoid	Transcription factor; BCL6 target
+RB1	chr13	48303744	48599436	lymphoid	Tumour suppressor; cell cycle
+B2M	chr15	44711358	44718851	lymphoid	HLA class I; immune evasion
+MAP2K1	chr15	66386837	66491656	lymphoid	ERK signaling
+CREBBP	chr16	3725054	3880713	lymphoid	Acetyltransferase; loss-of-function in FL/DLBCL
+CIITA	chr16	10866222	10943021	lymphoid	MHC class II transactivator
+PRKCB	chr16	23835983	24220611	lymphoid	Protein kinase C beta
+CD19	chr16	28931965	28939342	lymphoid	BCR coreceptor; therapy target
+TP53	chr17	7661779	7687546	lymphoid	Tumour suppressor
+CD79B	chr17	63928738	63932336	lymphoid	BCR co-receptor signaling
+GNA13	chr17	65009289	65056740	lymphoid	G-protein; germinal center exit
+MALT1	chr18	58671465	58754477	lymphoid	Paracaspase; NF-kB; MALT lymphoma
+BCL2	chr18	63123346	63320128	lymphoid	Anti-apoptotic; t(14;18) in FL/DLBCL
+RPS15	chr19	1438358	1440495	lymphoid	Ribosomal; CLL
+TCF3	chr19	1609291	1652615	lymphoid	BL; E-box transcription factor
+SMARCA4	chr19	10960932	11079426	lymphoid	Chromatin remodeling
+MEF2B	chr19	19145567	19192131	lymphoid	Transcription factor; FL/DLBCL
+ARHGEF1	chr19	41883173	41930150	lymphoid	Guanine nucleotide exchange
+SOX11	chr2	5692384	5701385	lymphoid	MCL marker
+BCL11A	chr2	60450520	60554467	lymphoid	Transcription factor; lymphoma
+DUSP2	chr2	96143169	96145440	lymphoid	MAP kinase phosphatase
+CXCR4	chr2	136114349	136119177	lymphoid	Chemokine receptor; CLL/WM
+SF3B1	chr2	197388515	197435079	lymphoid	Splicing factor; CLL
+SAMHD1	chr20	36890229	36951893	lymphoid	dNTP hydrolase; CLL
+EP300	chr22	41092510	41180077	lymphoid	Acetyltransferase
+MYD88	chr3	38138552	38143024	lymphoid	TLR signaling adaptor; L265P hotspot
+SETD2	chr3	47016428	47164113	lymphoid	H3K36 methyltransferase
+RHOA	chr3	49359139	49412998	lymphoid	Rho GTPase; AITL G17V hotspot
+TBL1XR1	chr3	177019340	177228000	lymphoid	Transcription corepressor
+PIK3CA	chr3	179148114	179240093	lymphoid	PI3K catalytic subunit alpha
+KLHL6	chr3	183487551	183555706	lymphoid	BCR signaling ubiquitin adaptor
+BCL6	chr3	187721377	187745725	lymphoid	Transcription factor; t(3;14) in DLBCL
+FBXW7	chr4	152320544	152536092	lymphoid	Ubiquitin E3 ligase
+FAT1	chr4	186587794	186726722	lymphoid	Tumour suppressor; Hippo pathway
+IRF4	chr6	391739	411443	lymphoid	Transcription factor; MYC target
+H1-4	chr6	26156329	26157115	lymphoid	Linker histone H1; DLBCL
+HLA-A	chr6	29941260	29949572	lymphoid	Immune evasion
+HLA-C	chr6	31268749	31272130	lymphoid	Immune evasion
+HLA-B	chr6	31353872	31367067	lymphoid	Immune evasion
+PIM1	chr6	37170152	37175428	lymphoid	Kinase; BCR/TLR signaling
+CCND3	chr6	41934934	42050357	lymphoid	Cyclin D3; DLBCL hotspot
+SGK1	chr6	134169248	134318112	lymphoid	Kinase; germinal center
+TNFAIP3	chr6	137867214	137883314	lymphoid	A20; NF-kB negative regulator
+CARD11	chr7	2906142	3044228	lymphoid	NF-kB signaling scaffold
+PCLO	chr7	82754012	83162930	lymphoid	Pepe-scaffold; recurrently mutated
+BRAF	chr7	140719327	140924929	lymphoid	MAPK kinase; HCL V600E
+EZH2	chr7	148807257	148884321	lymphoid	Histone methyltransferase; Y641/A677/A687 hotspots
+LYN	chr8	55879835	56014169	lymphoid	Src family kinase; BCR signaling
+MYC	chr8	127735434	127742951	lymphoid	Proto-oncogene, BCL translocations
+CDKN2A	chr9	21967752	21995301	lymphoid	Cell cycle regulator (p16/p14ARF)
+SYK	chr9	90801787	90898549	lymphoid	BCR/FcR signaling kinase
+NOTCH1	chr9	136494433	136546048	lymphoid	Notch pathway; CLL
+DDX3X	chrX	41333348	41364472	lymphoid	RNA helicase; Burkitt/DLBCL
+BTK	chrX	101349338	101390796	lymphoid	BCR kinase; ibrutinib target

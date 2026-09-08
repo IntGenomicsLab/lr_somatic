@@ -1,0 +1,1343 @@
+// ============================================================
+// LRSomatic Report theme: Spectral headings, IBM Plex Sans body, IBM Plex Mono data;
+// fonts base64-embedded in _fonts.scss; scss:defaults then scss:rules (Quarto convention)
+// ============================================================
+
+/*-- scss:defaults --*/
+
+// ── Core palette — warm paper + ink + a single confident accent ──
+$report-primary:       #0d5c75; // deep cyan-teal — clinical spine accent
+$report-primary-light: #128aa6; // brighter teal
+$report-primary-muted: #e8f1f4; // pale teal wash — quiet fills
+
+$report-success:       #3f7d4e; // muted clinical green
+$report-warning:       #a9781a; // ochre / amber
+$report-danger:        #b3402f; // brick red
+
+$report-text:          #1b1e22; // warm near-black ink
+$report-text-muted:    #6a6f76;
+$report-bg:            #f6f4ee; // warm archival paper
+$report-surface:       #ffffff;
+$report-border:        #e4e0d6; // warm hairline
+
+// ── Bootstrap SCSS variable overrides ─────────────────────────
+$primary:              $report-primary;
+$success:              $report-success;
+$warning:              $report-warning;
+$danger:               $report-danger;
+$body-bg:              $report-bg;
+$body-color:           $report-text;
+$border-color:         $report-border;
+$link-color:           $report-primary;
+
+// Typography — embedded webfonts, graceful system fallbacks
+$font-family-sans-serif: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+$font-family-monospace:  "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+$headings-font-family:   "Spectral", Georgia, "Times New Roman", serif;
+
+$font-size-base:       0.92rem;
+$headings-color:       $report-text;
+$headings-font-weight: 600;
+$line-height-base:     1.6;
+
+$border-radius:        6px;
+$border-radius-sm:     4px;
+$border-radius-lg:     8px;
+
+/*-- scss:rules --*/
+
+@import "fonts";
+
+// ============================================================
+// CSS custom properties — light mode
+// ============================================================
+:root {
+  --color-primary:        #{$report-primary};
+  --color-primary-light:  #{$report-primary-light};
+  --color-primary-muted:  #{$report-primary-muted};
+  --color-success:        #{$report-success};
+  --color-warning:        #{$report-warning};
+  --color-danger:         #{$report-danger};
+  --color-text:           #{$report-text};
+  --color-text-muted:     #{$report-text-muted};
+  --color-bg:             #{$report-bg};
+  --color-surface:        #{$report-surface};
+  --color-surface-alt:    #faf8f2;
+  --color-border:         #{$report-border};
+
+  --font-sans:    "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: "Spectral", Georgia, "Times New Roman", serif;
+
+  // One surface for every card, table, plate and menu: background, hairline border, this radius
+  --card-radius:  8px;
+
+  // Impact colour tokens (values match formatStyle in _smallvariants.qmd)
+  --impact-high:     #f7e3df;
+  --impact-moderate: #f6edd6;
+  --impact-low:      #e4efe3;
+  --impact-modifier: #f3f1ea;
+
+  // SV-type colour tokens (values match formatStyle in _sv.qmd)
+  --sv-del:  #dbeafe;
+  --sv-dup:  #dcfce7;
+  --sv-inv:  #fef9c3;
+  --sv-ins:  #fee2e2;
+  --sv-bnd:  #f3e8ff;
+
+  // Circos ring palette, kept in sync with R/circos.R (SNV colours are softened SBS-6)
+  --circos-snv-ca:  #2EBAED;
+  --circos-snv-cg:  #1b1e22;
+  --circos-snv-ct:  #b3402f;
+  --circos-snv-ta:  #c7c2b8;
+  --circos-snv-tc:  #ADCC54;
+  --circos-snv-tg:  #F0D0CE;
+  // SV (hue-matched to --sv-* table tokens)
+  --circos-sv-ins:  #cf5b46;
+  --circos-sv-del:  #2f6db3;
+  --circos-sv-inv:  #c08a1e;
+  --circos-sv-dup:  #3f7d4e;
+  // CNV (tied to report spine)
+  --circos-cnv-major: #b3402f;
+  --circos-cnv-minor: #0d5c75;
+  --circos-cnv-total: #1b1e22;
+  // BND/translocation
+  --circos-bnd:     #8a5fa3;
+  // Breakend circos only: the selected arc and the panel-gene bodies
+  --circos-bnd-selected: #d7263d;
+  --circos-bnd-gene:     #0d5c75;
+}
+
+// ============================================================
+// Dark mode — warm-neutral ink
+// ============================================================
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary:        #3fb0cc;
+    --color-primary-light:  #5cc7e0;
+    --color-primary-muted:  #16323d;
+    --color-success:        #5fb874;
+    --color-warning:        #d6a23c;
+    --color-danger:         #e0715f;
+    --color-text:           #e8e6df;
+    --color-text-muted:     #9aa0a6;
+    --color-bg:             #14161a;
+    --color-surface:        #1d2025;
+    --color-surface-alt:    #21252b;
+    --color-border:         #31363d;
+    // Circos legend swatches that would be invisible on dark bg — lighten to match --color-text
+    --circos-snv-cg:        #e8e6df;
+    --circos-cnv-total:     #e8e6df;
+    // Circos plates stay light; only captions and the selected-row tint go dark
+  }
+
+  body { background: var(--color-bg) !important; color: var(--color-text) !important; }
+
+  // DT dark-mode reset (overrides DT inline backgrounds)
+  table.dataTable tbody tr {
+    background: var(--color-surface) !important;
+    td {
+      background-color: var(--color-surface) !important;
+      color: var(--color-text) !important;
+      border-color: var(--color-border) !important;
+    }
+    &:hover td { background-color: var(--color-primary-muted) !important; }
+  }
+
+  .callout { background: var(--color-surface) !important; border-color: var(--color-border) !important; }
+  .callout-header { background: transparent !important; }
+  .quarto-title-block, .quarto-title-meta { color: var(--color-text) !important; }
+  #TOC, .sidebar-navigation { background: transparent !important; }
+}
+
+// ============================================================
+// Page
+// ============================================================
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv05";
+  background-color: var(--color-bg);
+  counter-reset: section-counter;
+}
+
+p { line-height: 1.65; }
+
+// ============================================================
+// Masthead — Quarto's auto title block becomes a slim eyebrow
+// ============================================================
+.quarto-title-block .quarto-title .title,
+header#title-block-header .title {
+  font-family: var(--font-sans);
+  font-size: 0.72rem !important;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-bottom: 0;
+}
+
+// The render date is in the footer line; saying it twice is one more thing to read.
+.quarto-title-block .quarto-title-meta,
+header#title-block-header .quarto-title-meta,
+.quarto-title-meta-heading { display: none; }
+
+// ============================================================
+// Hero — sample identity band
+// ============================================================
+.report-hero {
+  margin: 0.3rem 0 2rem;
+  padding: 0.9rem 0 1.3rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.report-hero__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  margin: 0 0 0.75rem;
+  word-break: break-word;
+}
+
+.report-hero__badges { display: flex; flex-wrap: wrap; gap: 7px; }
+
+// ============================================================
+// Section headings — numbered rules
+// ============================================================
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.55rem;
+  letter-spacing: -0.005em;
+  color: var(--color-text);
+  margin-top: 2.6rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+
+  &::before {
+    counter-increment: section-counter;
+    content: counter(section-counter, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    letter-spacing: 0.04em;
+    transform: translateY(-0.15em);
+    flex: none;
+  }
+}
+
+h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  color: var(--color-text);
+}
+
+code, pre { font-family: var(--font-mono); }
+code:not(pre code) {
+  background: var(--color-primary-muted);
+  color: var(--color-primary);
+  padding: 0.08em 0.38em;
+  border-radius: 4px;
+  font-size: 0.86em;
+}
+
+blockquote {
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-surface);
+  margin: 0 0 1.4rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 0 var(--card-radius) var(--card-radius) 0;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+
+  p { margin: 0; }
+  strong { color: var(--color-text); }
+}
+
+// ============================================================
+// Badges (run mode / reference / sex)
+// ============================================================
+.report-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  &.is-matched {
+    color: var(--color-success);
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-success) 35%, transparent);
+  }
+  &.is-tumour-only {
+    color: var(--color-warning);
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-warning) 35%, transparent);
+  }
+  &.is-meta {
+    color: var(--color-text-muted);
+    background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
+    box-shadow: inset 0 0 0 1px var(--color-border);
+  }
+}
+
+// ============================================================
+// Summary metrics — three labelled groups of flat cards
+// ============================================================
+.metric-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0 0 30px;
+}
+
+.metric-group__title {
+  font-family: var(--font-sans);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+// One surface, no per-card accent: the group title says what a number is about
+.metric-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-radius);
+  padding: 12px 14px 11px;
+  min-width: 0;
+}
+
+.metric-card__label {
+  font-family: var(--font-sans);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+
+  // Opt-out of uppercase for a single character (e.g. the trailing "s" in "SNVs")
+  .lc { text-transform: none; }
+}
+
+.metric-card__value {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 500;
+  font-feature-settings: "tnum" 1;
+  color: var(--color-text);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric-card__subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--color-text-muted);
+  margin-top: 5px;
+}
+
+// ============================================================
+// Notices — "nothing to show", quietly
+// ============================================================
+.section-notice {
+  margin: 0 0 1rem;
+  padding: 0.7rem 1rem;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--card-radius);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  max-width: 78ch;
+
+  &--warn {
+    border-style: solid;
+    border-left: 3px solid var(--color-warning);
+    color: var(--color-text);
+  }
+}
+
+// ============================================================
+// Figures — tool-generated plots in the report's own frame
+// ============================================================
+// `display: block` is load-bearing: Quarto's inline-block `figure` class would shrink the frame
+.report-figure {
+  display: block;
+  margin: 0 0 1rem;
+  padding: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-radius);
+
+  img { max-width: 100%; display: block; margin: auto; }
+}
+
+.report-figure__caption {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0.55rem 0 0;
+}
+
+// A Plotly page in an iframe: the frame is the surface, the page inside is white.
+.report-figure__frame {
+  display: block;
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-radius);
+  background: #fff;
+}
+
+// ============================================================
+// Panel controls (gene-panel selector)
+// ============================================================
+.panel-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-radius);
+}
+
+.panel-controls__label {
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.panel-controls__toggles {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// `.is-on` is toggled from JS, not styled off :checked, so chip and checkbox agree after a Clear
+.panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+
+  &:hover { border-color: var(--color-primary); }
+
+  &.is-on {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  }
+
+  input {
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+  }
+
+  &:focus-within {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
+  }
+}
+
+// Shared by #panel-clear and #facet-clear (the latter hidden until a facet is set)
+.panel-controls__clear {
+  padding: 5px 11px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
+  }
+}
+
+.panel-controls__count {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+.panel-controls__custom-area {
+  padding: 12px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-radius);
+  margin-bottom: 14px;
+
+  label {
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    width: 440px;
+    max-width: 100%;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
+    }
+  }
+}
+
+// ============================================================
+// DT tables
+// ============================================================
+.datatables, div.dataTables_wrapper {
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 4px 12px 8px;
+}
+
+table.dataTable {
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  font-family: var(--font-sans);
+
+  thead th {
+    background: var(--color-surface-alt) !important;
+    color: var(--color-text-muted) !important;
+    border-bottom: 1.5px solid var(--color-border) !important;
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 10px 12px !important;
+    white-space: nowrap;
+  }
+
+  thead input, thead select {
+    border: 1px solid var(--color-border) !important;
+    border-radius: 5px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.72rem !important;
+    padding: 3px 7px !important;
+    background: var(--color-bg) !important;
+    color: var(--color-text) !important;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  // Hairline rows, no zebra: the impact/svtype tints are the only row colour
+  tbody {
+    tr td {
+      font-size: 0.8rem;
+      padding: 7px 12px !important;
+      border-bottom: 1px solid var(--color-border) !important;
+      color: var(--color-text) !important;
+      background: var(--color-surface) !important;
+    }
+    tr td:first-child { font-weight: 500; }
+    tr:hover td { background: var(--color-primary-muted) !important; }
+  }
+}
+
+// DT Buttons toolbar
+div.dt-buttons {
+  margin-bottom: 10px !important;
+
+  button.dt-button {
+    background: var(--color-surface) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 6px !important;
+    color: var(--color-text-muted) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 5px 14px !important;
+    margin-right: 5px !important;
+    box-shadow: none !important;
+    transition: background 0.15s, border-color 0.15s, color 0.15s !important;
+
+    &:hover {
+      background: var(--color-primary-muted) !important;
+      border-color: var(--color-primary) !important;
+      color: var(--color-primary) !important;
+    }
+  }
+}
+
+.dataTables_info,
+.dataTables_length,
+.dataTables_paginate {
+  font-family: var(--font-mono) !important;
+  font-size: 0.74rem !important;
+  color: var(--color-text-muted) !important;
+}
+
+.dataTables_paginate .paginate_button.current {
+  border-radius: 5px !important;
+  color: var(--color-primary) !important;
+  font-weight: 600;
+}
+
+.dataTables_filter input {
+  border: 1px solid var(--color-border) !important;
+  border-radius: 6px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.76rem !important;
+  padding: 4px 10px !important;
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
+  }
+}
+
+// ============================================================
+// Static (kable) tables — the metric/value lists in the QC blocks
+// ============================================================
+// Same header treatment and hairlines as the DT tables beside them
+.callout-body table.table {
+  width: auto;
+  min-width: 320px;
+  max-width: 100%;
+  margin: 0.4rem 0 0.8rem;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+
+  thead th {
+    background: var(--color-surface-alt);
+    color: var(--color-text-muted);
+    border-bottom: 1.5px solid var(--color-border);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+  }
+
+  tbody td {
+    padding: 6px 12px;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text);
+    vertical-align: baseline;
+  }
+  tbody td:first-child { color: var(--color-text-muted); }
+  tbody td:last-child  { font-family: var(--font-mono); font-feature-settings: "tnum" 1; }
+  tbody tr:hover td    { background: var(--color-primary-muted); }
+}
+
+// "Tumour"/"Normal" labels above paired QC tables (matched loosely: widget tagList vs bare markdown)
+.callout-body p > strong:only-child {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-top: 0.4rem;
+}
+
+// ============================================================
+// Column facet filters (tickbox dropdowns)
+// ============================================================
+// Replaces DT's text input inside its own div.form-group (see facet_filter.js); palette tokens only, so no separate dark rules
+.facet {
+  position: relative;
+  display: block;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+// Typography matches the `thead input` rule above
+.facet__btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 3px 7px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
+  }
+}
+
+.facet__label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.facet__caret {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+// A set filter has to stay visible in the header
+.facet--active .facet__btn {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+// A fixed child of <body>, positioned by the script (DT's scroll containers would clip it); above Bootstrap sticky/fixed, below modal; the theme's one shadow
+.facet__menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  min-width: 210px;
+  max-width: 320px;
+  max-height: calc(100vh - 16px);
+  padding: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-radius);
+  box-shadow: 0 6px 20px -8px rgba(27, 30, 34, 0.25);
+  text-align: left;
+  font-weight: 400;
+
+  // The base rule below sets display, so [hidden] needs saying explicitly.
+  &[hidden] { display: none; }
+}
+
+.facet__tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 2px 6px;
+  border-bottom: 1px solid var(--color-border);
+
+  .facet__find {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 3px 7px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+  }
+
+  .facet__all,
+  .facet__none {
+    flex: 0 0 auto;
+    padding: 3px 7px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    font-family: var(--font-sans);
+    font-size: 0.68rem;
+    cursor: pointer;
+
+    &:hover { color: var(--color-primary); border-color: var(--color-primary); }
+  }
+}
+
+.facet__list {
+  max-height: 240px;   // consequence is ~30 VEP terms
+  overflow-y: auto;
+  padding-top: 4px;
+}
+
+.facet__opt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 3px 5px;
+  border-radius: 4px;
+  font-weight: 400;
+  cursor: pointer;
+
+  &:hover { background: var(--color-surface-alt); }
+
+  // The menu left the header, so the `thead input` padding no longer applies; a checkbox is not a text box
+  input[type="checkbox"] {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0 !important;
+    width: auto !important;
+    cursor: pointer;
+  }
+
+  &--hidden { display: none; }
+  &--none .facet__v { color: var(--color-text-muted); font-style: italic; }
+
+  // No rows left under the other filters: dimmed in place so nothing moves and it stays tickable
+  &--empty { opacity: 0.45; }
+}
+
+.facet__v {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text);
+}
+
+.facet__n {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+}
+
+.facet__foot {
+  margin: 6px 0 2px;
+  padding: 0 4px;
+  font-family: var(--font-sans);
+  font-size: 0.64rem;
+  color: var(--color-text-muted);
+}
+
+// ============================================================
+// Tab strips — Quarto's panel-tabset and the Wakhan rank tabs, one look
+// ============================================================
+.panel-tabset > .nav-tabs {
+  border-bottom: 1px solid var(--color-border);
+  gap: 2px;
+  margin-bottom: 0.9rem;
+
+  .nav-link {
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-text-muted);
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 8px 14px;
+    background: transparent;
+    transition: color 0.15s, border-color 0.15s;
+
+    &:hover { color: var(--color-primary); }
+    &.active {
+      color: var(--color-primary);
+      background: transparent;
+      border-bottom-color: var(--color-primary);
+    }
+  }
+}
+
+// Built by render_wakhan_cn_tabs() in R/utils.R; same underline treatment as the tabset
+.wakhan-cn-tabs__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.wakhan-cn-tab {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 8px 14px;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover  { color: var(--color-primary); }
+  &.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+}
+
+.wakhan-cn-pane { display: none; }
+.wakhan-cn-pane.active { display: block; }
+
+// ============================================================
+// TOC / sidebar
+// ============================================================
+#TOC {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  padding-right: 14px;
+
+  ul { list-style: none; padding-left: 0; }
+  li { margin: 1px 0; }
+
+  a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    display: block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border-left: 2px solid transparent;
+    transition: color 0.12s, background 0.12s, border-color 0.12s;
+
+    &:hover  { color: var(--color-primary); background: var(--color-primary-muted); }
+    &.active {
+      color: var(--color-primary);
+      font-weight: 600;
+      border-left-color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    }
+  }
+}
+
+.sidebar nav[role="doc-toc"] > h2,
+#toc-title {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border: none;
+  padding: 0 0 0.4rem 10px;
+  margin: 0;
+}
+
+// ============================================================
+// Circos — plate with the legend beside it
+// ============================================================
+.circos-figure {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+  .circos-figure { grid-template-columns: minmax(0, 1fr); }
+}
+
+// Both circos plates stay light in dark mode: their colours are calibrated for paper
+.circos-container,
+.bnd-circos {
+  background: #fcfbf7;
+  border: 1px solid #d8d3c8;
+  border-radius: var(--card-radius);
+  color: #1b1e22;
+}
+
+.circos-container {
+  display: block;   // see .report-figure: Quarto's `figure` class is inline-block
+  margin: 0;
+  padding: 18px;
+
+  .report-figure__caption { color: #6b6153; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .circos-container, .bnd-circos { border-color: #4a4540; }
+}
+
+.circos-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 0.6rem;
+}
+
+// Legend: vertical beside the genome-wide plate, horizontal under the breakend plate
+.circos-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+}
+
+.bnd-circos ~ .circos-legend {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 900px) {
+  .circos-figure .circos-legend {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px 28px;
+  }
+}
+
+.circos-legend__group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 110px;
+}
+
+.circos-legend__title {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 3px;
+}
+
+.circos-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+// SNV swatches — round dots
+.circos-swatch--dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--_swatch);
+}
+
+// SV / CNV swatches — short horizontal bar
+.circos-swatch--bar {
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: var(--_swatch);
+}
+
+// BND/translocation — curved arc glyph via border trick
+.circos-swatch--arc {
+  width: 14px;
+  height: 7px;
+  border-radius: 14px 14px 0 0;
+  border: 2px solid var(--_swatch);
+  border-bottom: none;
+  flex-shrink: 0;
+  background: transparent;
+}
+
+@media print {
+  .circos-legend { border-top-color: #ccc; }
+  .circos-eyebrow { color: #666; }
+}
+
+// ============================================================
+// Breakend circos — drawn client-side, cross-linked to the SV table
+// ============================================================
+// Built by assets/js/bnd_circos.js and redrawn per filter; the JS sets geometry only, all styling is here
+.bnd-circos {
+  padding: 18px 18px 10px;
+  max-width: 640px;
+  margin: 0 auto;
+
+  // aspect-ratio: an inline <svg> without width/height falls back to 150px in some engines
+  svg { width: 100%; height: auto; aspect-ratio: 1 / 1; display: block; }
+
+  .bnd-link {
+    fill: none;
+    stroke: var(--circos-bnd);
+    stroke-width: 1;
+    opacity: 0.5;
+    transition: opacity 0.12s ease, stroke 0.12s ease, stroke-width 0.12s ease;
+  }
+  // Filtered-out arcs are not drawn at all, so there is no dim state to style.
+  .bnd-link.is-selected {
+    stroke: var(--circos-bnd-selected);
+    stroke-width: 2.4;
+    opacity: 1;
+  }
+
+  // Ideogram bands carry their Giemsa fill inline (data); the outline keeps sparse chromosomes reading as a block
+  .bnd-sector { fill: none; stroke: #b0a99c; stroke-width: 0.6; }
+  .bnd-band   { stroke: none; }
+
+  .bnd-gene-body { fill: var(--circos-bnd-gene); stroke: none; }
+  .bnd-gene-line { fill: none; stroke: #b8b2a6; stroke-width: 0.8; }
+
+  .bnd-gene-label {
+    font-family: var(--font-sans);
+    font-size: 15px;      // user-space units: the viewBox is 1000 wide
+    font-weight: 600;
+    fill: var(--circos-bnd-gene);
+  }
+  .bnd-chrom-label {
+    font-family: var(--font-sans);
+    font-size: 17px;
+    font-weight: 600;
+    fill: currentColor;
+  }
+
+  .bnd-circos-empty {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #6b6153;
+    padding: 3rem 0;
+    margin: 0;
+  }
+}
+
+.bnd-circos-caption {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0.55rem 0 0;
+}
+
+// Rows picked in the SV table — the ones whose arcs are highlighted
+#sv-table table.dataTable tbody tr { cursor: pointer; }
+#sv-table table.dataTable tbody tr.bnd-selected td {
+  background: var(--color-primary-muted) !important;
+  box-shadow: inset 3px 0 0 var(--circos-bnd-selected);
+}
+
+// ============================================================
+// Table footnote — provenance / caveats printed under a data table
+// ============================================================
+.table-footnote {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  margin: 0.6rem 0 0;
+  max-width: 78ch;
+
+  code {
+    font-size: 0.95em;
+    background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
+    padding: 0.05em 0.35em;
+    border-radius: 3px;
+  }
+
+  // The consensus caveat is the one line a reader must not skim past.
+  .table-footnote__warn { color: var(--color-text); font-weight: 500; }
+}
+
+// Footnotes fold away by default; the disclosure stays quiet until hovered
+.table-details {
+  margin: 0.6rem 0 0;
+
+  > summary {
+    cursor: pointer;
+    width: fit-content;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    opacity: 0.75;
+    list-style: none;          // suppress the default triangle; ::before draws it
+    user-select: none;
+
+    &::-webkit-details-marker { display: none; }
+
+    &::before {
+      content: "▸";
+      display: inline-block;
+      margin-right: 0.4em;
+      font-size: 0.9em;
+      transition: transform 0.12s ease;
+    }
+
+    &:hover { opacity: 1; }
+  }
+
+  &[open] > summary::before { transform: rotate(90deg); }
+
+  // The body is a .table-footnote; its own top margin would double the gap.
+  > .table-footnote { margin-top: 0.4rem; }
+}
+
+@media print {
+  .table-footnote { color: #666; }
+  // Print is static: a collapsed disclosure would drop the provenance
+  .table-details > .table-footnote { display: block !important; }
+  .table-details > summary { display: none; }
+}
+
+// ============================================================
+// Callouts — the collapsible QC blocks and the ASCAT diagnostics
+// ============================================================
+// Quarto's note callout without the icon and the blue: one surface, a teal left rule
+.callout {
+  border-radius: var(--card-radius) !important;
+  border: 1px solid var(--color-border) !important;
+  border-left: 3px solid var(--color-primary) !important;
+  background: var(--color-surface) !important;
+  font-size: 0.88rem !important;
+  margin: 0 0 0.9rem !important;
+}
+
+.callout .callout-header {
+  background: transparent !important;
+  padding: 0.6rem 0.9rem !important;
+  align-items: center;
+}
+
+.callout .callout-icon-container { display: none !important; }
+
+.callout .callout-title,
+.callout-header {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.callout .callout-title-container h3 {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.callout .callout-body-container { padding: 0.2rem 0.9rem 0.6rem !important; }
+
+.callout .callout-toggle { opacity: 0.6; }
+
+// Footer line
+main > p:last-child em,
+.quarto-document-content > p:last-child em {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+}
+
+// ============================================================
+// Max-width guard for full-page-layout
+// ============================================================
+.page-full .quarto-title-block,
+.page-full > .column-body {
+  max-width: 1400px;
+}
+
+// ============================================================
+// Print stylesheet
+// ============================================================
+@media print {
+  #TOC, .sidebar-navigation, .quarto-sidebar,
+  .dt-buttons, div.dt-buttons, .panel-controls,
+  // .facet__menu is a child of <body>, so it has to be hidden separately from .facet
+  #custom-gene-panel, .facet, .facet__menu, .dataTables_filter, .dataTables_length,
+  .dataTables_paginate, .dataTables_info { display: none !important; }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .dataTables_scrollBody {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  table.dataTable {
+    thead th { background: #f0f0ec !important; color: #000 !important; }
+    tbody tr td { color: #000 !important; }
+  }
+
+  .metric-card, .report-figure, .section-notice {
+    break-inside: avoid;
+    border: 1px solid #ddd !important;
+  }
+
+  .metric-grid { grid-template-columns: repeat(4, 1fr) !important; }
+  .report-hero { border-color: #ccc; }
+  .circos-figure { grid-template-columns: minmax(0, 1fr) !important; }
+
+  h2 { page-break-after: avoid; }
+  section { page-break-inside: avoid; }
+}

@@ -1,0 +1,409 @@
+## Structural variants
+
+```{r sv-info}
+# Built from the caller VCF, so it survives a missing VEP SV VCF
+if (is.null(sv_table) || nrow(sv_table) == 0) {
+  section_notice("No somatic structural variants detected.")
+}
+```
+
+```{r sv-bnd-circos}
+# Breakend circos: R selects and serialises the data, assets/js/bnd_circos.js draws it so it re-lays-out per filter (see R/circos_bnd.R)
+bnd_res = NULL
+if (!is.null(sv_table) && nrow(sv_table) > 0) {
+  bnd_res = tryCatch({
+    # One filtered set feeds both calls
+    bnd_drawn = bnd_links(sv_table, chromosomes)
+    bnd_circos_data(bnd_drawn,
+                    bnd_panel_genes(bnd_drawn, params$all_panels),
+                    cytobands, chrom_lens, chromosomes)
+  }, error = function(e) {
+    message("Breakend circos failed: ", conditionMessage(e))
+    NULL
+  })
+}
+
+if (!is.null(bnd_res) && !is.null(bnd_res$data)) {
+  legend_item = function(swatch, var, label) {
+    tags$div(class = "circos-legend__item",
+             tags$span(class = paste0("circos-swatch--", swatch),
+                       style = paste0("--_swatch: var(", var, ")")),
+             label)
+  }
+  tagList(
+    # The chromosome count is filled in by the plot, since it changes with the filter.
+    tags$p(class = "circos-eyebrow",
+           tags$span(id = "bnd-eyebrow", "Breakends"),
+           " · select a row below to highlight its arc"),
+    tags$div(class = "bnd-circos", id = "bnd-circos"),
+    tags$div(class = "circos-legend",
+      tags$div(class = "circos-legend__group",
+        tags$div(class = "circos-legend__title", "Breakend circos"),
+        legend_item("arc", "--circos-bnd",          "Rearrangement"),
+        legend_item("arc", "--circos-bnd-selected", "Selected in the table"),
+        legend_item("bar", "--circos-bnd-gene",     "Panel gene")
+      )
+    ),
+    tags$p(class = "bnd-circos-caption", tags$span(id = "bnd-shown-count"))
+  )
+} else if (!is.null(bnd_res)) {
+  section_notice(bnd_res$reason)
+}
+```
+
+```{r sv-bnd-circos-data, results='asis'}
+# Payload, then the drawing code inlined from bnd_circos.js (lintable JS, self-contained report)
+if (!is.null(bnd_res) && !is.null(bnd_res$data)) {
+  cat(bnd_circos_script(bnd_res), "\n")
+  cat("<script>\n")
+  cat(readLines(file.path(params$repo_dir, "assets/js/bnd_circos.js")), sep = "\n")
+  cat("\n</script>\n")
+}
+```
+
+```{r sv-prepare, results='asis'}
+# Column positions published from R, not scraped from the header
+if (!is.null(sv_table) && nrow(sv_table) > 0) {
+  sv_display = copy(sv_table)
+  # Populated client-side by the panel filter; load-time hits are already in sv_panel_hit
+  sv_display[, panel_hit := ""]
+  # Readable locus/size/gene columns; the raw bedpe columns stay (hidden, exported, read by the JS). See sv_display_columns()
+  sv_display = cbind(sv_display, sv_display_columns(sv_display, chromosomes))
+  setcolorder(sv_display, c("id", "panel_hit", "svclass", "svtype",
+                            "locus", "size", "genes",
+                            "vaf", "consequence", "impact", "caller"))
+  cat("<script>window.SV_COLS = ", js_col_index_map(names(sv_display)), ";</script>\n",
+      sep = "")
+
+  # Tickbox facet values (facet_filter.js), emitted after setcolorder; `caller` has one value and is omitted
+  sv_facet_cols = c("svclass", "svtype", "impact", "consequence", "caller")
+  cat("<script>window.SV_FACET_COLS = ", js_vec(sv_facet_cols), ";</script>\n", sep = "")
+  cat("<script>window.SV_FACETS = ",
+      js_facet_defs(sv_display,
+                    cols   = sv_facet_cols,
+                    seps   = c(consequence = ","),
+                    levels = list(impact = IMPACT_LEVELS)),
+      ";</script>\n", sep = "")
+}
+```
+
+```{r sv-table}
+if (!is.null(sv_table) && nrow(sv_table) > 0) {
+  idx0 = function(nm) which(names(sv_display) == nm) - 1L
+
+  # Truncate the display only; sort/search/export renderings return the full list
+  gene_render = JS(
+    "function(data, type) {",
+    "  if (type !== 'display' || !data) return data;",
+    "  const g = String(data).split(',');",
+    "  if (g.length <= 6) return data;",
+    "  return '<span title=\"' + String(data).replace(/\"/g, '') + '\">' +",
+    "         g.slice(0, 6).join(',') + ' +' + (g.length - 6) + ' more</span>';",
+    "}")
+
+  # Same predicate as the row filter, so the column always agrees with what is shown.
+  panel_hit_render = JS(
+    "function(data, type, row) {",
+    "  return window.svPanelHitLabel ? window.svPanelHitLabel(row, window.SV_COLS) : '';",
+    "}")
+
+  # Sort `locus`/`size` on their hidden numeric keys; display/filter/export keep the readable string
+  orthogonal_render = function(key) JS(
+    "function(data, type, row) {",
+    "  if (type !== 'sort' && type !== 'type') return data;",
+    "  const cols = window.SV_COLS || {};",
+    sprintf("  const k = cols['%s'];", key),
+    "  return k === undefined ? data : row[k];",
+    "}")
+
+  # Hidden, not dropped: the JS by-name lookups and the CSV export read these columns
+  hidden = c("chrom_a", "pos_a", "chrom_b", "pos_b", "gene_a", "gene_b",
+             "sv_len", "size_bp", "locus_sort")
+
+  exp_opts = list(orthogonal = "export",
+                  columns    = seq_len(ncol(sv_display)) - 1L)
+
+  dtbl = DT::datatable(
+    sv_display,
+    rownames   = FALSE,
+    filter     = "top",
+    elementId  = "sv-table",
+    # Explicit selection: none. The breakend circos owns row selection below
+    selection  = "none",
+    extensions = c("Buttons", "Scroller"),
+    options    = list(
+      dom       = "Bfrtip",
+      # "export" falls through to the full readable string; the explicit column list keeps the hidden raw columns in the download
+      buttons   = list(list(extend = "copy", exportOptions = exp_opts),
+                       list(extend = "csv",  exportOptions = exp_opts)),
+      scrollX   = TRUE,
+      scrollY   = "350px",
+      scroller  = TRUE,
+      deferRender = TRUE,
+      pageLength = 25,
+      columnDefs = list(
+        list(targets = idx0("panel_hit"), render = panel_hit_render),
+        list(targets = idx0("genes"),     render = gene_render),
+        list(targets = idx0("locus"),     render = orthogonal_render("locus_sort")),
+        list(targets = idx0("size"),      render = orthogonal_render("size_bp")),
+        list(targets = vapply(hidden, idx0, integer(1), USE.NAMES = FALSE),
+             visible = FALSE)
+      ),
+      initComplete = JS("function() { window.svTableElem = this.api().table().node(); }")
+    )
+  ) |>
+    DT::formatStyle(
+      columns = "svtype",
+      target  = "cell",
+      backgroundColor = DT::styleEqual(
+        c("DEL",     "DUP",     "INV",     "INS",     "BND",     "sBND"),
+        c("#dbeafe", "#dcfce7", "#fef9c3", "#fee2e2", "#f3e8ff", "#f3e8ff")
+      )
+    )
+  dtbl
+}
+```
+
+```{r sv-bnd-circos-js, results='asis'}
+# Cross-link table and circos: this owns row selection; row identity comes from the DataTables API (Scroller recycles <tr>s), so the class is re-applied per draw; every filter change redraws from window.BND_DATA
+if (!is.null(bnd_res) && !is.null(bnd_res$data)) {
+  cat("<script>\n")
+  cat(r"----(
+(function () {
+  const SELECTED = new Set();
+  // null until the first sync: everything counts as visible.
+  let visibleIds = null;
+  let visibleGenes = new Set();
+
+  const table = () => (window.svTableElem ? $(window.svTableElem).DataTable() : null);
+  const host = () => document.getElementById("bnd-circos");
+
+  function rowId(row) {
+    const cols = window.SV_COLS || {};
+    return cols["id"] === undefined ? null : String(row[cols["id"]]);
+  }
+
+  // Panel genes per row from the same predicate as the panel_hit cell; labels are "GENE (side, how)", the gene name ends at " ("
+  function rowGenes(row) {
+    if (!window.svPanelHits) return [];
+    return window.svPanelHits(row, window.SV_COLS)
+      .map((lab) => lab.split(" (")[0])
+      .join(",")
+      .split(",")
+      .map((g) => g.trim().toUpperCase())
+      .filter((g) => g.length > 0);
+  }
+
+  // Redraw for the current filter and selection; untouched chromosomes leave the plot
+  function apply() {
+    if (!window.bndCircos) return;
+    const stats = window.bndCircos.render(host(), visibleIds, visibleGenes, SELECTED);
+    caption(stats);
+  }
+
+  function caption(stats) {
+    const total = (window.BND_DATA && window.BND_DATA.links)
+      ? window.BND_DATA.links.length : stats.arcs;
+    const eyebrow = document.getElementById("bnd-eyebrow");
+    if (eyebrow) {
+      eyebrow.textContent = "Breakends · " + stats.chroms + " chromosome" +
+                            (stats.chroms === 1 ? "" : "s");
+    }
+    const el = document.getElementById("bnd-shown-count");
+    if (!el) return;
+    const parts = [stats.arcs + " of " + total + " arc" + (total === 1 ? "" : "s") + " shown"];
+    if (stats.genes > 0) parts.push(stats.genes + " panel gene" + (stats.genes === 1 ? "" : "s"));
+    if (SELECTED.size > 0) parts.push(SELECTED.size + " selected");
+    el.textContent = parts.join(" · ");
+  }
+
+  // Re-apply the selected class on every draw (Scroller rebuilds <tr> nodes)
+  function paintRows() {
+    const t = table();
+    if (!t) return;
+    $(t.table().body()).find("tr").each(function () {
+      const d = t.row(this).data();
+      if (!d) return;
+      const id = rowId(d);
+      $(this).toggleClass("bnd-selected", id !== null && SELECTED.has(id));
+    });
+  }
+
+  window.bndSyncFilter = function () {
+    const t = table();
+    if (!t) return;
+    const ids = new Set();
+    const genes = new Set();
+    t.rows({ search: "applied" }).data().each(function (row) {
+      const id = rowId(row);
+      if (id !== null) ids.add(id);
+      rowGenes(row).forEach((g) => genes.add(g));
+    });
+    visibleIds = ids;
+    visibleGenes = genes;
+    apply();
+    paintRows();
+  };
+
+  $(document).on("click", "#sv-table tbody tr", function () {
+    const t = table();
+    if (!t) return;
+    const d = t.row(this).data();
+    if (!d) return;
+    const id = rowId(d);
+    if (id === null) return;
+    if (SELECTED.has(id)) SELECTED.delete(id); else SELECTED.add(id);
+    $(this).toggleClass("bnd-selected", SELECTED.has(id));
+    apply();
+  });
+
+  // Covers the per-column search boxes too, which do not go through redraw().
+  $(document).on("draw.dt", function (e) {
+    if (e.target === window.svTableElem) window.bndSyncFilter();
+  });
+
+  // Draw once immediately rather than waiting for the table's first draw.dt
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", apply);
+  } else {
+    apply();
+  }
+})();
+)----")
+  cat("\n</script>\n")
+}
+```
+
+```{r sv-footnote}
+# Provenance footnote: where the breakend symbols came from, and which panel matching mode, reference and windows are active
+if (!is.null(sv_table) && nrow(sv_table) > 0) {
+  rel = function(p) {
+    if (is.null(p)) return(NULL)
+    root = sub("/+$", "", normalizePath(sample_dir, mustWork = FALSE))
+    full = normalizePath(p, mustWork = FALSE)
+    if (startsWith(full, paste0(root, "/"))) substring(full, nchar(root) + 2L) else p
+  }
+
+  # One HTML string, not a tagList (htmltools' newlines would render as " ,")
+  code = function(x) paste0("<code>", htmltools::htmlEscape(x), "</code>")
+
+  # One note per registered panel, hidden unless ticked (updatePanelNotes() toggles `hidden`)
+  panel_body = function(p) {
+    if (isTRUE(p$has_coords)) {
+      sprintf(paste("Panel %s matches on <strong>breakend coordinates</strong> (%s intervals,",
+                    "within %s of either breakend of a BND or %s of the span of any other",
+                    "type)%s Each %s entry names the gene, the side it matched on (%s, %s,",
+                    "or %s for a contiguous type), and then either %s — the breakend or span",
+                    "overlaps the gene itself — or the distance to it. Those windows are wide,",
+                    "so a hit is not on its own a disrupted gene: read the second token."),
+              code(basename(as.character(p$path)[1])), length(unlist(p$start)),
+              fmt_bp(SV_PANEL_WINDOW_BND), fmt_bp(SV_PANEL_WINDOW_OTHER),
+              if (nzchar(as.character(p$reference)[1]))
+                paste0(", built on ", as.character(p$reference)[1], ".")
+              else paste(", whose reference is unverified — the panel declares none, so",
+                         "nothing checks it against this report's."),
+              code("panel_hit"), code("A"), code("B"), code("span"), code("direct"))
+    } else {
+      sprintf(paste("Panel %s carries no coordinates, so SVs are matched on <strong>gene",
+                    "symbol</strong> only: a breakend VEP did not annotate cannot match,",
+                    "whatever it is near. Every %s entry therefore reads %s — a symbol sits",
+                    "on the breakend itself, and there is no distance to report. Add %s, %s",
+                    "and %s columns to match on position instead."),
+              code(basename(as.character(p$path)[1])), code("panel_hit"), code("direct"),
+              code("chrom"), code("start"), code("end"))
+    }
+  }
+
+  note_span = function(key, body, shown) {
+    sprintf('<span class="sv-panel-note" data-panel="%s"%s>%s</span>',
+            htmltools::htmlEscape(key, attribute = TRUE),
+            if (shown) "" else " hidden", body)
+  }
+
+  all_p    = if (!is.null(params$all_panels)) params$all_panels else list()
+  selected = setdiff(as.character(unlist(params$default_panels)), "__all__")
+
+  panel_note = paste(c(
+    note_span("__none__",
+              "No gene panel is ticked; tick one above to filter both tables.",
+              length(selected) == 0),
+    vapply(names(all_p), function(nm)
+      note_span(nm, panel_body(all_p[[nm]]), nm %in% selected),
+      character(1)),
+    note_span("__custom__",
+              paste("The custom list is bare symbols, so its SVs are matched on the",
+                    "annotated breakend genes only — no positional window."),
+              FALSE),
+    note_span("__multi__",
+              sprintf(paste("With more than one panel ticked a row is kept if it hits",
+                            "<strong>any</strong> of them, and each %s entry ends with the",
+                            "panel it matched in square brackets."), code("panel_hit")),
+              length(selected) >= 2)
+  ), collapse = " ")
+
+  annot_note = if (!is.null(SECTION_DATA$sv$annotation_path))
+    sprintf(paste("Breakend genes are from %s, joined on record ID; records that",
+                  "annotation dropped (it keeps only FILTER PASS) have none."),
+            code(rel(SECTION_DATA$sv$annotation_path)))
+  else
+    "No SV annotation file was found, so the gene column is empty."
+
+  # The locus/size convention: a contiguous type is one span, a breakend two joined loci
+  locus_note = sprintf(paste("%s reads as a span (%s) for a contiguous type and as two",
+                             "joined loci (%s or %s) for a breakend, which is also why %s",
+                             "is blank for a breakend: its two loci bound no interval, so",
+                             "there is no length to report. The underlying %s columns are",
+                             "hidden rather than dropped — they are still what the panel",
+                             "filter matches on, and the copy and CSV buttons still export",
+                             "them. %s merges both sides for a contiguous type and labels",
+                             "them %s and %s for a breakend, where which partner carries",
+                             "which gene is the point."),
+                       code("locus"), code("chr13:48,303,151–48,915,700"),
+                       code("→"), code("↔"), code("size"),
+                       paste(code("chrom_a"), code("pos_a"), code("chrom_b"),
+                             code("pos_b"), sep = ", "),
+                       code("genes"), code("A:"), code("B:"))
+
+  # What the circos shows, only when there is a plot
+  circos_note = if (!is.null(bnd_res) && !is.null(bnd_res$data))
+    sprintf(paste("The circos above draws one arc per breakend with both loci mapped, and",
+                  "is redrawn whenever the filter changes — it shows only the chromosomes",
+                  "the visible rows touch, out of the %d these %d arc%s span in total.",
+                  "Gene bodies are the panel genes within %s of a breakend — the same test",
+                  "that fills the %s column, so a gene is drawn exactly when a visible row",
+                  "names it, and a panel carrying no coordinates draws none. Bodies are",
+                  "markers at a minimum visible width, not spans to scale."),
+            length(bnd_res$chroms), bnd_res$n_links,
+            if (bnd_res$n_links == 1) "" else "s",
+            fmt_bp(SV_PANEL_WINDOW_BND), code("panel_hit"))
+  else NULL
+
+  table_details(
+    summary = "How these rows and this plot are built",
+    HTML(paste(
+      sprintf("%s rearrangement%s, one row each — Severus writes both sides of a breakend as two records, and mate pairs are collapsed here%s.",
+              nrow(sv_table), if (nrow(sv_table) == 1) "" else "s",
+              if (!is.na(n_trans) && !is.na(n_intra_bnd))
+                sprintf(" (%s interchromosomal, %s intra-chromosomal breakend%s)",
+                        n_trans, n_intra_bnd, if (n_intra_bnd == 1) "" else "s")
+              else ""),
+      locus_note, annot_note, panel_note, circos_note))
+  )
+}
+```
+
+```{r sv-panel-notes-js, results='asis'}
+# Show the notes for the ticked panels; defined here because the spans are written above
+cat(r"----(<script>
+window.updatePanelNotes = function () {
+  var active = (window.svPanelState && window.svPanelState.panels) || [];
+  document.querySelectorAll(".sv-panel-note").forEach(function (el) {
+    var key = el.getAttribute("data-panel");
+    if (key === "__none__")       el.hidden = active.length > 0;
+    else if (key === "__multi__") el.hidden = active.length < 2;
+    else                          el.hidden = active.indexOf(key) < 0;
+  });
+};
+</script>
+)----")
+```

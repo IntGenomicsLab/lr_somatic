@@ -9,6 +9,9 @@ lint:
     - .github/workflows/awsfulltest.yml
     - .github/CONTRIBUTING.md
   files_unchanged:
+    # Exempt: carries `assets/lrsomatic_report/** linguist-vendored`, which keeps the
+    # vendored tool source out of GitHub's language statistics
+    - .gitattributes
     - CODE_OF_CONDUCT.md
     - assets/nf-core-lrsomatic_logo_light.png
     - docs/images/nf-core-lrsomatic_logo_light.png
@@ -30,7 +33,7 @@ lint:
     - validation.help.afterText
     - validation.summary.beforeText
     - validation.summary.afterText
-nf_core_version: 4.0.2
+nf_core_version: 4.1.0
 repository_type: pipeline
 template:
   author: Robert Forsyth & Luuk Harbers
