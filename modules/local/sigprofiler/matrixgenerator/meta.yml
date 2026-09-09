@@ -1,0 +1,109 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "sigprofiler_matrixgenerator"
+description: Generate SBS, DBS and ID mutational matrices from a somatic small-variant VCF with SigProfilerMatrixGenerator
+keywords:
+  - mutational signatures
+  - mutational matrix
+  - sbs96
+  - sigprofiler
+  - somatic
+tools:
+  - "sigprofilermatrixgenerator":
+      description: "SigProfilerMatrixGenerator creates mutational matrices for all types of somatic mutations"
+      homepage: "https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator"
+      documentation: "https://sigprofilersuite.github.io/SigProfilerMatrixGenerator/"
+      tool_dev_url: "https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator"
+      doi: "10.1186/s12864-019-6041-2"
+      licence: ["BSD-2-Clause"]
+
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. `[ id:'sample1' ]`
+    - vcf:
+        type: file
+        description: |
+          Somatic SNV/indel VCF for one sample (plain or bgzipped). Only CHROM, POS, REF and
+          ALT are read; FILTER is ignored, so filter to PASS beforehand.
+        pattern: "*.{vcf,vcf.gz}"
+  - - meta2:
+        type: map
+        description: Groovy Map (unused)
+    - volume:
+        type: directory
+        description: SigProfilerMatrixGenerator volume containing tsb/<genome>/
+  - genome:
+      type: string
+      description: SigProfilerMatrixGenerator genome name, e.g. GRCh38 or CHM13-T2T
+
+output:
+  sbs96:
+    - meta:
+        type: map
+        description: Groovy Map containing sample information
+    - "output/SBS/*.SBS96.all":
+        type: file
+        description: SBS96 mutational matrix (rows are the 96 trinucleotide classes, one column per sample)
+        pattern: "output/SBS/*.SBS96.all"
+  dbs78:
+    - meta:
+        type: map
+        description: Groovy Map containing sample information
+    - "output/DBS/*.DBS78.all":
+        type: file
+        description: DBS78 mutational matrix (absent when the sample has no doublet substitutions)
+        pattern: "output/DBS/*.DBS78.all"
+  id83:
+    - meta:
+        type: map
+        description: Groovy Map containing sample information
+    - "output/ID/*.ID83.all":
+        type: file
+        description: ID83 mutational matrix (absent when the sample has no indels)
+        pattern: "output/ID/*.ID83.all"
+  output_dir:
+    - meta:
+        type: map
+        description: Groovy Map containing sample information
+    - "output":
+        type: directory
+        description: All SigProfilerMatrixGenerator output (SBS/DBS/ID matrices at every context size, plots, TSB statistics, sorted VCF)
+        pattern: "output"
+  logs:
+    - meta:
+        type: map
+        description: Groovy Map containing sample information
+    - "output/logs/*":
+        type: file
+        description: SigProfilerMatrixGenerator log files
+        pattern: "output/logs/*"
+  versions_sigprofilermatrixgenerator:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - sigprofilermatrixgenerator:
+          type: string
+          description: The tool name
+      - 'python -c ''import importlib.metadata as m; print(m.version("SigProfilerMatrixGenerator"))''':
+          type: string
+          description: The command used to generate the version of the tool
+
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - sigprofilermatrixgenerator:
+          type: string
+          description: The tool name
+      - 'python -c ''import importlib.metadata as m; print(m.version("SigProfilerMatrixGenerator"))''':
+          type: string
+          description: The command used to generate the version of the tool
+
+authors:
+  - "@ljwharbers"
+maintainers:
+  - "@ljwharbers"

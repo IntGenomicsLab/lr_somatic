@@ -29,6 +29,9 @@ The pipeline produces per-sample output directories. Two modes exist depending o
 │    │    │   ├── nanoplot_ubam_rep1
 │    │    │   └── samtools
 │    │    └── whatshap_stats
+│    ├── signatures
+│    │   ├── assignment
+│    │   └── matrices
 │    ├── variants
 │    │   ├── clairsto
 │    │   ├── deepsomatic
@@ -71,6 +74,9 @@ The pipeline produces per-sample output directories. Two modes exist depending o
 │    │    │   ├── nanoplot_ubam_rep1
 │    │    │   └── samtools
 │    │    └── whatshap_stats
+│    ├── signatures
+│    │   ├── assignment
+│    │   └── matrices
 │    ├── variants
 │    │   ├── clair3
 │    │   ├── clairs
@@ -437,6 +443,72 @@ Phased variant calls produced by Longphase. Present in all samples.
 | `SVs/sample_SV_VEP.vcf.gz`                  | Annotated somatic structural variant vcf file                           |
 | `SVs/sample_SV_VEP_summary.html`            | Visual summary of somatic structural variant annotations in html format |
 | `SVs/sample_SV_VEP.vcf.gz.tbi`              | Annotated somatic structural variant vcf index file                     |
+
+</details>
+
+### `signatures`
+
+Mutational signature analysis of the PASS SNVs and indels in the phased somatic VCF: [SigProfilerMatrixGenerator](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator) builds the mutational matrices and [SigProfilerAssignment](https://github.com/SigProfilerSuite/SigProfilerAssignment) fits COSMIC reference signatures to them. For `--genome CHM13` the matrices use the `CHM13-T2T` genome and the SBS/DBS fits use COSMIC signatures renormalised to CHM13; ID83 signatures are not genome-normalised by COSMIC and always use the GRCh37 set. The `DBS78` and `ID83` directories are absent when a sample has no doublet substitutions or indels.
+
+<details markdown="1">
+<summary>Output files</summary>
+
+```
+├── signatures
+│   ├── matrices
+│   │   ├── output
+│   │   │   ├── SBS
+│   │   │   │   ├── sample.SBS96.all
+│   │   │   │   ├── sample.SBS288.all
+│   │   │   │   ├── sample.SBS1536.all
+│   │   │   │   └── ...
+│   │   │   ├── DBS
+│   │   │   │   ├── sample.DBS78.all
+│   │   │   │   └── ...
+│   │   │   ├── ID
+│   │   │   │   ├── sample.ID83.all
+│   │   │   │   └── ...
+│   │   │   ├── plots
+│   │   │   │   └── *.pdf
+│   │   │   ├── vcf_files
+│   │   │   └── logs
+│   │   │       ├── SigProfilerMatrixGenerator_sample_<genome>.out
+│   │   │       └── SigProfilerMatrixGenerator_sample_<genome>.err
+│   └── assignment
+│       └── COSMIC_v3.6
+│           ├── SBS96
+│           │   ├── Assignment_Solution
+│           │   │   ├── Activities
+│           │   │   │   ├── Assignment_Solution_Activities.txt
+│           │   │   │   ├── Assignment_Solution_Activity_Plots.pdf
+│           │   │   │   ├── Assignment_Solution_TMB_plot.pdf
+│           │   │   │   └── Decomposed_MutationType_Probabilities.txt
+│           │   │   ├── Signatures
+│           │   │   │   ├── Assignment_Solution_Signatures.txt
+│           │   │   │   └── SBS_96_plots_Assignment_Solution.pdf
+│           │   │   └── Solution_Stats
+│           │   │       ├── Assignment_Solution_Samples_Stats.txt
+│           │   │       └── Assignment_Solution_Signature_Assignment_log.txt
+│           │   └── JOB_METADATA_SPA.txt
+│           ├── DBS78
+│           │   └── ...
+│           └── ID83
+│               └── ...
+```
+
+| File                                                                                     | Description                                                                                                                                        |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `matrices/output/SBS/sample.SBS96.all`                                                   | SBS96 mutational matrix (mutation counts per trinucleotide class); further context sizes (SBS6, SBS24, SBS288, SBS384, SBS1536, SBS6144) alongside |
+| `matrices/output/DBS/sample.DBS78.all`                                                   | DBS78 doublet-substitution matrix (and DBS186/DBS1248/DBS2976 variants)                                                                            |
+| `matrices/output/ID/sample.ID83.all`                                                     | ID83 indel matrix (and ID28/ID96/ID415 variants)                                                                                                   |
+| `matrices/output/plots/*.pdf`                                                            | SigProfilerPlotting spectra of the matrices (with the default `--sigprofiler_matrix_args "--plot"`)                                                |
+| `matrices/output/vcf_files/`                                                             | Sorted input mutations with their SigProfilerMatrixGenerator classification (`seqInfo`)                                                            |
+| `matrices/output/logs/*`                                                                 | SigProfilerMatrixGenerator log and error files; the summary reports the number of analysed mutations and reference-base mismatches                 |
+| `assignment/COSMIC_v<version>/<context>/Assignment_Solution/Activities/*_Activities.txt` | Number of mutations attributed to every COSMIC signature                                                                                           |
+| `assignment/COSMIC_v<version>/<context>/Assignment_Solution/Activities/*.pdf`            | Activity bar plots and tumour mutational burden plot                                                                                               |
+| `assignment/COSMIC_v<version>/<context>/Assignment_Solution/Signatures/`                 | The reference signatures used for the fit and their spectra                                                                                        |
+| `assignment/COSMIC_v<version>/<context>/Assignment_Solution/Solution_Stats/`             | Per-sample reconstruction statistics (cosine similarity, L2 error) and the step-wise assignment log                                                |
+| `assignment/COSMIC_v<version>/<context>/JOB_METADATA_SPA.txt`                            | SigProfilerAssignment run metadata, including the genome build the reference signatures were normalised to                                         |
 
 </details>
 

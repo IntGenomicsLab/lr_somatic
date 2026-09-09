@@ -50,6 +50,11 @@
                         "installed_by": ["modules", "vcf_gather_bcftools"],
                         "patch": "modules/nf-core/bcftools/sort/bcftools-sort.diff"
                     },
+                    "bcftools/view": {
+                        "branch": "master",
+                        "git_sha": "feef37435aea56816adf4b3bde1fc76aac327a8d",
+                        "installed_by": ["modules"]
+                    },
                     "deepvariant/callvariants": {
                         "branch": "master",
                         "git_sha": "f2b138ee1d91f67d31c187317d7e83e429bf0309",

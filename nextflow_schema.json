@@ -320,6 +320,49 @@
                 }
             }
         },
+        "sigprofiler_options": {
+            "title": "Mutational signature options",
+            "type": "object",
+            "description": "Options for SigProfilerMatrixGenerator / SigProfilerAssignment",
+            "default": "",
+            "fa_icon": "fas fa-fingerprint",
+            "properties": {
+                "sigprofiler_genome_dir": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "SigProfilerMatrixGenerator volume directory containing tsb/<sigprofiler_genome>/ (the installed genome payload).",
+                    "help_text": "Create it once with `--download_sigprofiler_genome` (published to `<outdir>/cache/sigprofiler/volume`) or with `SigProfilerMatrixGenerator install <genome> --volume <dir>`, then pass it here on later runs.",
+                    "fa_icon": "fas fa-folder-open"
+                },
+                "download_sigprofiler_genome": {
+                    "type": "boolean",
+                    "description": "Download and install the ~3 GB SigProfilerMatrixGenerator genome payload during the run instead of using --sigprofiler_genome_dir.",
+                    "fa_icon": "fas fa-download"
+                },
+                "sigprofiler_cosmic_version": {
+                    "type": "number",
+                    "default": 3.6,
+                    "description": "COSMIC reference signature version fitted by SigProfilerAssignment.",
+                    "fa_icon": "fas fa-hashtag"
+                },
+                "sigprofiler_exclude_signature_subgroups": {
+                    "type": "string",
+                    "description": "Comma-separated SigProfilerAssignment signature subgroups to exclude from the fit (e.g. `Artifact_signatures,Lymphoid_signatures`).",
+                    "fa_icon": "fas fa-filter"
+                },
+                "sigprofiler_matrix_args": {
+                    "type": "string",
+                    "default": "--plot",
+                    "description": "Extra arguments for `SigProfilerMatrixGenerator matrix_generator` (e.g. `--plot --tsb_stat`).",
+                    "fa_icon": "fas fa-terminal"
+                },
+                "sigprofiler_assignment_args": {
+                    "type": "string",
+                    "description": "Extra arguments for `SigProfilerAssignment cosmic_fit` (e.g. `--make_plots False`).",
+                    "fa_icon": "fas fa-terminal"
+                }
+            }
+        },
         "report_options": {
             "title": "Report options",
             "type": "object",
@@ -349,6 +392,10 @@
                 "skip_cramino": {
                     "type": "boolean",
                     "description": "Skips Cramino"
+                },
+                "skip_signatures": {
+                    "type": "boolean",
+                    "description": "Skips mutational signature analysis (SigProfilerMatrixGenerator + SigProfilerAssignment)"
                 },
                 "skip_mosdepth": {
                     "type": "boolean",
@@ -591,6 +638,9 @@
         },
         {
             "$ref": "#/$defs/wakhan_options"
+        },
+        {
+            "$ref": "#/$defs/sigprofiler_options"
         },
         {
             "$ref": "#/$defs/report_options"

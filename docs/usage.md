@@ -125,6 +125,8 @@ nextflow run IntGenomicsLab/lrsomatic \
 
 If you want to run with a CHM13 reference without using `--genome CHM13` (for example, via a custom FASTA or configuration), you must also specify `--vep_genome T2T-CHM13v2.0` and `--vep_species homo_sapiens_gca009914755v4`.
 
+For mutational signatures, `--genome CHM13` selects the `CHM13-T2T` SigProfilerMatrixGenerator genome. Its payload is not on the AlexandrovLab FTP yet, so `--download_sigprofiler_genome` fetches it from the IntGenomicsLab Globus collection (`--sigprofiler_genome_url`); see [Mutational Signature Options](#mutational-signature-options).
+
 For structural variants, the CHM13 panel of normals is a merged panel combining the 1000 Genomes CHM13 panel shipped with SEVERUS and the ASAP cohort, with median confidence intervals per breakpoint. The pipeline exposes it as `--pon_file` and hands it to SEVERUS via that tool's own `--PON` flag; it is downloaded automatically with `--genome CHM13`. GRCh38 continues to use the 1000 Genomes panel shipped with SEVERUS.
 
 ### Pipeline options
@@ -155,6 +157,7 @@ For structural variants, the CHM13 panel of normals is a merged panel combining 
 | `--modkit_args`        | Additional arguments passed to `modkit pileup`. The default restricts output to 5mC calls at CpG sites; note that `--modified-bases` only filters the output, so PacBio positions where the 5mC and 5hmC probabilities sum above 1 are still dropped. Default = `--cpg --modified-bases 5mC` |
 | `--modkit_phased`      | A boolean to run `modkit pileup --phased` on the Longphase-haplotagged BAMs, producing `_hp1`, `_hp2` and `_combined` bedMethyl files per sample instead of a single unphased file. Default = `false`                                                                                        |
 | `--skip_whatshapstats` | A boolean to skip WhatsHap phasing statistics. Default = `false`                                                                                                                                                                                                                             |
+| `--skip_signatures`    | A boolean to skip mutational signature analysis (SigProfilerMatrixGenerator + SigProfilerAssignment). Default = `false`                                                                                                                                                                      |
 | `--skip_report`        | A boolean to skip the final per-sample HTML report. Default = `false`                                                                                                                                                                                                                        |
 
 #### LONGPHASE options:
@@ -286,6 +289,26 @@ full pipeline:
 | ----------------- | ------------------------------------------------------------------------------------------------------- |
 | `--wakhan_chroms` | A string specifying a subset of chromosomes for WAKHAN to process, e.g. `"chr1,chr2"`. Default = `null` |
 
+#### Mutational Signature Options
+
+Mutational signature analysis runs [SigProfilerMatrixGenerator](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator) on the PASS SNVs and indels of the phased somatic VCF of every sample (SBS, DBS and ID matrices at all context sizes, with plots) and then fits COSMIC reference signatures per sample with [SigProfilerAssignment](https://github.com/SigProfilerSuite/SigProfilerAssignment) (SBS96, DBS78 and ID83). It needs SigProfilerMatrixGenerator's per-genome payload (~3 GB, the transcriptional-strand-annotated chromosomes), which is not shipped with the pipeline. Either:
+
+- run once with `--download_sigprofiler_genome`; the payload is installed, checksum-verified and published to `<outdir>/cache/sigprofiler/volume`, or
+- point `--sigprofiler_genome_dir` at an existing SigProfilerMatrixGenerator volume (a directory containing `tsb/<genome>/`, e.g. one created with `SigProfilerMatrixGenerator install GRCh38 --volume <dir>` or the published cache from a previous run).
+
+Running with neither (and without `--skip_signatures`) stops the pipeline at start-up with an explanatory error.
+
+| Parameter                                   | Description                                                                                                                                                                                         |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--sigprofiler_genome_dir`                  | Full path to a SigProfilerMatrixGenerator volume containing `tsb/<sigprofiler_genome>/`. Default = `null`                                                                                           |
+| `--download_sigprofiler_genome`             | A boolean to download and install the genome payload during the run (published to `<outdir>/cache/sigprofiler/volume`). Default = `false`                                                           |
+| `--sigprofiler_cosmic_version`              | COSMIC reference signature version fitted by SigProfilerAssignment. Default = `3.6`                                                                                                                 |
+| `--sigprofiler_exclude_signature_subgroups` | Comma-separated SigProfilerAssignment signature subgroups to exclude from the fit, e.g. `"Artifact_signatures,Lymphoid_signatures"` (see the SigProfilerAssignment documentation). Default = `null` |
+| `--sigprofiler_matrix_args`                 | Extra arguments for `SigProfilerMatrixGenerator matrix_generator`. Default = `"--plot"`                                                                                                             |
+| `--sigprofiler_assignment_args`             | Extra arguments for `SigProfilerAssignment cosmic_fit`, e.g. `"--make_plots False"`. Default = `null`                                                                                               |
+
+The tools run from a purpose-built image (`ghcr.io/ljwharbers/sigprofiler`) because CHM13 support is not in a SigProfiler release yet: SigProfilerMatrixGenerator comes from the branch behind [SigProfilerSuite/SigProfilerMatrixGenerator#250](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator/pull/250) (adds the `CHM13-T2T` genome) and SigProfilerAssignment from [ljwharbers/SigProfilerAssignment](https://github.com/ljwharbers/SigProfilerAssignment/tree/chm13-t2t-support), which adds COSMIC SBS/DBS signatures renormalised to the CHM13 trinucleotide/dinucleotide composition (stock SigProfilerAssignment silently falls back to GRCh37 signatures for CHM13). Indel (ID83) signatures are not genome-normalised by COSMIC and always use the GRCh37 set. Conda is not supported for this step.
+
 #### Variant Filtering and Combining Options
 
 These options control how variants from multiple callers are filtered and merged.
@@ -318,15 +341,17 @@ These options control how variants from multiple callers are filtered and merged
 
 The following parameters are automatically populated from the `--genome` iGenomes configuration and do not normally need to be set manually. They can be overridden when using a custom genome or reference build not present in the iGenomes configuration.
 
-| Parameter          | Description                                                                                                                                  |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--fasta`          | Full path to the reference FASTA file. Auto-populated from `--genome`. Override for custom genomes.                                          |
-| `--bed_file`       | BED file of callable/target regions passed to SEVERUS for SV calling. Auto-populated from `--genome`.                                        |
-| `--pon_file`       | Panel of Normals breakpoint table (bgzipped CSV) for SEVERUS somatic SV filtering in tumor-only mode. Auto-populated from `--genome`.        |
-| `--centromere_bed` | BED file of centromere coordinates passed to WAKHAN. Auto-populated from `--genome`.                                                         |
-| `--genome_name`    | Assembly name string passed to ASCAT for genome-specific reference file selection. Auto-populated from `--genome`.                           |
-| `--vep_genome`     | VEP genome identifier (e.g. `GRCh38`, `T2T-CHM13v2.0`). Auto-populated from `--genome`. Override for CHM13 or custom assemblies.             |
-| `--vep_species`    | VEP species identifier. Auto-populated from `--genome`. Override for non-standard assemblies (e.g. `homo_sapiens_gca009914755v4` for CHM13). |
+| Parameter                  | Description                                                                                                                                                                   |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--fasta`                  | Full path to the reference FASTA file. Auto-populated from `--genome`. Override for custom genomes.                                                                           |
+| `--bed_file`               | BED file of callable/target regions passed to SEVERUS for SV calling. Auto-populated from `--genome`.                                                                         |
+| `--pon_file`               | Panel of Normals breakpoint table (bgzipped CSV) for SEVERUS somatic SV filtering in tumor-only mode. Auto-populated from `--genome`.                                         |
+| `--centromere_bed`         | BED file of centromere coordinates passed to WAKHAN. Auto-populated from `--genome`.                                                                                          |
+| `--genome_name`            | Assembly name string passed to ASCAT for genome-specific reference file selection. Auto-populated from `--genome`.                                                            |
+| `--vep_genome`             | VEP genome identifier (e.g. `GRCh38`, `T2T-CHM13v2.0`). Auto-populated from `--genome`. Override for CHM13 or custom assemblies.                                              |
+| `--vep_species`            | VEP species identifier. Auto-populated from `--genome`. Override for non-standard assemblies (e.g. `homo_sapiens_gca009914755v4` for CHM13).                                  |
+| `--sigprofiler_genome`     | SigProfilerMatrixGenerator / SigProfilerAssignment genome name (`GRCh38` or `CHM13-T2T`). Auto-populated from `--genome`.                                                     |
+| `--sigprofiler_genome_url` | URL of the `<sigprofiler_genome>.tar.gz` payload for `--download_sigprofiler_genome`; unset means the AlexandrovLab FTP. Auto-populated from `--genome` (set for CHM13 only). |
 
 ### Updating the pipeline
 

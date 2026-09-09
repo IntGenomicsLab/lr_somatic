@@ -38,12 +38,16 @@ include { ENSEMBLVEP_VEP as GERMLINE_VEP    } from '../modules/nf-core/ensemblve
 include { ENSEMBLVEP_VEP as SV_VEP          } from '../modules/nf-core/ensemblvep/vep/main.nf'
 include { WHATSHAP_STATS                    } from '../modules/nf-core/whatshap/stats/main'
 include { MODKIT_PILEUP                     } from '../modules/nf-core/modkit/pileup/main'
+include { BCFTOOLS_VIEW as SIGNATURES_BCFTOOLS_VIEW } from '../modules/nf-core/bcftools/view/main'
+include { SIGPROFILER_MATRIXGENERATOR       } from '../modules/local/sigprofiler/matrixgenerator/main'
+include { SIGPROFILER_ASSIGNMENT            } from '../modules/local/sigprofiler/assignment/main'
 
 //
 // IMPORT SUBWORKFLOWS
 //
 include { PREPARE_REFERENCE_FILES         } from '../subworkflows/local/prepare_reference_files'
 include { PREPARE_ANNOTATION              } from '../subworkflows/local/prepare_annotation'
+include { PREPARE_SIGNATURES              } from '../subworkflows/local/prepare_signatures'
 include { BAM_STATS_SAMTOOLS              } from '../subworkflows/nf-core/bam_stats_samtools/main'
 include { TUMORONLY_SMALLVAR              } from '../subworkflows/local/tumor_only/tumoronly_smallvar'
 include { PAIRED_SMALLVAR_SOMATIC         } from '../subworkflows/local/paired/paired_smallvar_somatic'
@@ -100,6 +104,8 @@ workflow LRSOMATIC {
     params.bed_file = getGenomeAttribute('bed_file')
     params.vep_genome = getGenomeAttribute('vep_genome')
     params.vep_species = getGenomeAttribute('vep_species')
+    params.sigprofiler_genome = getGenomeAttribute('sigprofiler_genome')
+    params.sigprofiler_genome_url = getGenomeAttribute('sigprofiler_genome_url')
 
     // Convert comma-separated caller strings to lists for internal use
     params.germline_var_keep = params.germline_var_keep instanceof List
@@ -766,6 +772,68 @@ workflow LRSOMATIC {
         )
 
         ch_somatic_vep_vcf = SOMATIC_VEP.out.vcf
+    }
+
+    if (!params.skip_signatures) {
+
+        // SUBWORKFLOW: PREPARE_SIGNATURES
+        // Validates (--sigprofiler_genome_dir) or installs (--download_sigprofiler_genome) the
+        // SigProfilerMatrixGenerator genome payload, tsb/<sigprofiler_genome>/
+        // Output: .volume -- path to the SigProfilerMatrixGenerator volume directory
+        PREPARE_SIGNATURES (
+            params.sigprofiler_genome,
+            params.sigprofiler_genome_url,
+            params.sigprofiler_genome_dir,
+            params.download_sigprofiler_genome
+        )
+        ch_versions = ch_versions.mix(PREPARE_SIGNATURES.out.versions)
+        sigprofiler_volume = PREPARE_SIGNATURES.out.volume.map { volume -> [[:], volume] }
+        // sigprofiler_volume: [[:], volume_dir]  -- empty meta + SigProfilerMatrixGenerator volume
+
+        //
+        // MODULE: SIGNATURES_BCFTOOLS_VIEW (BCFTOOLS_VIEW alias; label: process_medium)
+        // SigProfilerMatrixGenerator ignores FILTER and needs a plain-text VCF, so keep only the
+        // PASS SNVs / MNVs / indels of the phased somatic VCF as uncompressed VCF
+        // Input:  PHASING_HAPLOTYPING.out.phased_somatic_vcf -- [meta, vcf, tbi]
+        // Output: .vcf -- [meta, vcf]
+        //
+        SIGNATURES_BCFTOOLS_VIEW (
+            PHASING_HAPLOTYPING.out.phased_somatic_vcf,
+            [],
+            [],
+            []
+        )
+
+        //
+        // MODULE: SIGPROFILER_MATRIXGENERATOR (label: process_medium)
+        // Input:  [meta, vcf], [[:], volume], genome name
+        // Output: .sbs96 / .dbs78 / .id83 -- [meta, matrix]; .output_dir -- all matrices and plots
+        //
+        SIGPROFILER_MATRIXGENERATOR (
+            SIGNATURES_BCFTOOLS_VIEW.out.vcf,
+            sigprofiler_volume,
+            params.sigprofiler_genome
+        )
+
+        // DBS78 / ID83 matrices are only written when the sample carries such variants
+        SIGPROFILER_MATRIXGENERATOR.out.sbs96
+            .join(SIGPROFILER_MATRIXGENERATOR.out.dbs78, remainder: true)
+            .join(SIGPROFILER_MATRIXGENERATOR.out.id83, remainder: true)
+            .map { meta, sbs96, dbs78, id83 -> [meta, sbs96, dbs78 ?: [], id83 ?: []] }
+            .set { sigprofiler_matrices }
+        // sigprofiler_matrices: [meta, sbs96, dbs78 | [], id83 | []]
+
+        //
+        // MODULE: SIGPROFILER_ASSIGNMENT (label: process_low)
+        // Fits COSMIC reference signatures to each matrix; SBS/DBS signatures are specific to
+        // the genome build (GRCh38 or CHM13-T2T), ID signatures use the GRCh37 set upstream
+        // Output: per-sample Assignment_Solution directories with activities, statistics and plots
+        //
+        SIGPROFILER_ASSIGNMENT (
+            sigprofiler_matrices,
+            params.sigprofiler_genome,
+            params.sigprofiler_cosmic_version
+        )
     }
 
     // Build SEVERUS input by combining tumor-only and T/N paired samples with phased germline VCFs

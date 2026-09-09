@@ -1,0 +1,106 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "sigprofiler_assignment"
+description: Fit COSMIC reference mutational signatures to SBS96, DBS78 and ID83 matrices with SigProfilerAssignment
+keywords:
+  - mutational signatures
+  - cosmic
+  - signature fitting
+  - sigprofiler
+  - somatic
+tools:
+  - "sigprofilerassignment":
+      description: "SigProfilerAssignment assigns known mutational signatures (COSMIC or custom) to mutational matrices or mutation calls"
+      homepage: "https://github.com/SigProfilerSuite/SigProfilerAssignment"
+      documentation: "https://sigprofilersuite.github.io/SigProfilerAssignment/"
+      tool_dev_url: "https://github.com/SigProfilerSuite/SigProfilerAssignment"
+      doi: "10.1093/bioinformatics/btad756"
+      licence: ["BSD-2-Clause"]
+
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. `[ id:'sample1' ]`
+    - sbs96:
+        type: file
+        description: SBS96 matrix from SigProfilerMatrixGenerator
+        pattern: "*.SBS96.all"
+    - dbs78:
+        type: file
+        description: DBS78 matrix from SigProfilerMatrixGenerator (optional, may be [])
+        pattern: "*.DBS78.all"
+    - id83:
+        type: file
+        description: ID83 matrix from SigProfilerMatrixGenerator (optional, may be [])
+        pattern: "*.ID83.all"
+  - genome:
+      type: string
+      description: |
+        Genome build selecting the COSMIC reference signatures (GRCh37, GRCh38, CHM13-T2T, ...).
+        Only SBS and DBS signatures are build-specific; ID signatures always use the GRCh37 set.
+  - cosmic_version:
+      type: float
+      description: COSMIC signature version, e.g. 3.6
+
+output:
+  sbs96:
+    - meta:
+        type: map
+        description: Groovy Map containing sample information
+    - "*/SBS96":
+        type: directory
+        description: SigProfilerAssignment output for the SBS96 fit (Assignment_Solution/ with activities, signatures, statistics and plots; JOB_METADATA_SPA.txt)
+        pattern: "*/SBS96"
+  dbs78:
+    - meta:
+        type: map
+        description: Groovy Map containing sample information
+    - "*/DBS78":
+        type: directory
+        description: SigProfilerAssignment output for the DBS78 fit
+        pattern: "*/DBS78"
+  id83:
+    - meta:
+        type: map
+        description: Groovy Map containing sample information
+    - "*/ID83":
+        type: directory
+        description: SigProfilerAssignment output for the ID83 fit
+        pattern: "*/ID83"
+  activities:
+    - meta:
+        type: map
+        description: Groovy Map containing sample information
+    - "*/*/Assignment_Solution/Activities/*_Activities.txt":
+        type: file
+        description: Signature activity (mutation count per signature) tables, one per fitted matrix type
+        pattern: "*/*/Assignment_Solution/Activities/*_Activities.txt"
+  versions_sigprofilerassignment:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - sigprofilerassignment:
+          type: string
+          description: The tool name
+      - 'python -c ''import importlib.metadata as m; print(m.version("SigProfilerAssignment"))''':
+          type: string
+          description: The command used to generate the version of the tool
+
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - sigprofilerassignment:
+          type: string
+          description: The tool name
+      - 'python -c ''import importlib.metadata as m; print(m.version("SigProfilerAssignment"))''':
+          type: string
+          description: The command used to generate the version of the tool
+
+authors:
+  - "@ljwharbers"
+maintainers:
+  - "@ljwharbers"
