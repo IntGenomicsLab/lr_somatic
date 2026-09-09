@@ -7,11 +7,12 @@ nextflow_pipeline {
 
     test("-profile test_chm13") {
 
-        options "-profile test_chm13"
-
         when {
             params {
-                outdir = "$outputDir"
+                outdir  = "$outputDir"
+                input   = "https://raw.githubusercontent.com/IntGenomicsLab/test-datasets/main/samplesheets/samplesheet_lr-somatic_chm13.csv"
+                fasta   = "https://raw.githubusercontent.com/IntGenomicsLab/test-datasets/main/references/CHM13V2_maskedY_rCRS_chr19.fa.gz"
+                genome  = "CHM13"
             }
         }
 
@@ -31,7 +32,11 @@ nextflow_pipeline {
                     // sample3 (tumor-only) SAVANA output isn't asserted: `savana to` bundles CNA
                     // internally, and errorStrategy='ignore' on its CNA sparsity failures can
                     // discard the whole process's output, not just the CNA files (see PR description).
-                }
+                },
+                { assert snapshot(
+                    // pipeline versions.yml file for multiqc from which Nextflow version is removed because we test pipelines on multiple Nextflow versions
+                    removeNextflowVersion("$outputDir/pipeline_info/lrsomatic_software_mqc_versions.yml")
+                ).match() }
             )
         }
     }

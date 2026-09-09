@@ -220,9 +220,9 @@ samples run `savana to` instead (which chains the equivalent steps internally), 
 1000 Genomes population SNP set rather than the tumour's own calls. Both modes are restricted to
 canonical chromosomes via a genome-specific `--contigs` file.
 
-| Parameter                | Description                                                                                                            |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `--savana_pb_minsupport`  | Minimum supporting reads for SAVANA to call a variant on PacBio samples (`--min_support` with `--pb`). Default = `10`  |
+| Parameter                | Description                                                                                                           |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `--savana_pb_minsupport` | Minimum supporting reads for SAVANA to call a variant on PacBio samples (`--min_support` with `--pb`). Default = `10` |
 
 #### WAKHAN Options
 

@@ -243,7 +243,15 @@
                 },
                 "savana_chromosomes": {
                     "type": "string",
-                    "description": "Restrict `savana to`'s allele counting to specific chromosome numbers (SAVANA's -c/--chromosomes), e.g. '19'. Intended for test profiles running on partial references."
+                    "description": "Restrict SAVANA's allele counting and binning to given chromosome numbers (SAVANA's -c/--chromosomes), e.g. '19'. Applies to both `savana cna` and `savana to`."
+                },
+                "savana_allele_min_reads": {
+                    "type": "integer",
+                    "description": "Minimum reads per site for SAVANA to count a het-SNP allele (SAVANA's --allele_min_reads, default 10). Intended for test profiles running on downsampled data below that coverage floor."
+                },
+                "savana_allele_mapq": {
+                    "type": "integer",
+                    "description": "Mapping quality threshold for reads counted at a het-SNP site (SAVANA's --allele_mapq, default 5). Intended for test profiles running on downsampled data below that coverage floor."
                 }
             }
         },
