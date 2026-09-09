@@ -15,4 +15,9 @@ export_plots: true
 extra_fn_clean_exts:
   - "_aln"
 
+# samtools stats on long reads writes 70+ MB files (its read-length and coverage histograms run to
+# the longest read and deepest base). MultiQC silently skips any file above log_filesize_limit,
+# whose default is 50 MB, so the samtools stats section would only ever cover small files.
+log_filesize_limit: 500000000
+
 disable_version_detection: true
