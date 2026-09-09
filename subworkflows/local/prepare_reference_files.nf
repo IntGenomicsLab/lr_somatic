@@ -49,14 +49,19 @@ workflow PREPARE_REFERENCE_FILES {
         // Priority: explicit meta.clair3_model param > auto-detected from BAM header via modelMap
         // PacBio models from HKU mirror; ONT models from Oxford Nanopore CDN
         basecall_meta.map { meta, basecall_model_meta, _kinetics_meta ->
-            def id_new = basecall_model_meta ? clair3_modelMap.get(basecall_model_meta) : basecall_model_meta
-            def meta_new = [id: id_new]
             def model = (!meta.clair3_model || meta.clair3_model.toString().trim() in ['', '[]']) ? clair3_modelMap.get(basecall_model_meta) : meta.clair3_model
+            // Key the entry on the model that is actually downloaded. Keying on the header-derived
+            // name instead made a sample with an explicit clair3_model produce a second entry under
+            // the wrong name: .unique() kept both, UNTAR extracted two different models into
+            // directories with the same name, and the by-name combine in PAIRED_SMALLVAR_GERMLINE
+            // ran Clair3 twice per normal BAM (once with the wrong model), with the downstream join
+            // taking whichever finished first.
+            def meta_new = [id: model]
             def download_prefix = ( basecall_model_meta == 'hifi_revio' ? "https://www.bio8.cs.hku.hk/clair3/clair3_models/" : "https://cdn.oxfordnanoportal.com/software/analysis/models/clair3" )
             def url = "${download_prefix}/${model}.tar.gz"
             return [ meta_new, url ]
         }
-        .unique()  // deduplicate: multiple samples with the same basecall model share one download
+        .unique()  // deduplicate: multiple samples with the same Clair3 model share one download
         .set{ clair3_model_urls }
         // clair3_model_urls: [meta(id=clair3_model_name), download_url_str]
         //   one item per unique Clair3 model needed across all samples
