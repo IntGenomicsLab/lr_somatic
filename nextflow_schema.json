@@ -118,6 +118,24 @@
                 }
             }
         },
+        "modkit_options": {
+            "title": "Modkit options",
+            "type": "object",
+            "description": "Options for modkit pileup of base modifications",
+            "properties": {
+                "modkit_args": {
+                    "type": "string",
+                    "description": "Additional command line arguments passed to `modkit pileup`. The default restricts the bedMethyl output to 5mC calls at CpG sites. Note that `--modified-bases` only filters the output: on PacBio data, positions where the 5mC and 5hmC probabilities sum above 1 are still dropped, and non-conflicting 5hmC calls are counted in the `N_other` column.",
+                    "fa_icon": "fas fa-terminal",
+                    "default": "--cpg --modified-bases 5mC"
+                },
+                "modkit_phased": {
+                    "type": "boolean",
+                    "description": "Run `modkit pileup --phased` on the Longphase-haplotagged BAMs (HP tag) instead of the unphased aligned BAMs, producing `<sample>_hp1.bed.gz`, `<sample>_hp2.bed.gz` and `<sample>_combined.bed.gz`. Pileup then runs after phasing and haplotagging.",
+                    "default": false
+                }
+            }
+        },
         "reference_genome_options": {
             "title": "Reference genome options",
             "type": "object",
@@ -596,6 +614,9 @@
         },
         {
             "$ref": "#/$defs/longphase_options"
+        },
+        {
+            "$ref": "#/$defs/modkit_options"
         },
         {
             "$ref": "#/$defs/reference_genome_options"

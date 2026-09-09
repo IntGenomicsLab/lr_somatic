@@ -1,9 +1,20 @@
 Changes in component 'nf-core/modkit/pileup'
+'modules/nf-core/modkit/pileup/environment.yml' is unchanged
 'modules/nf-core/modkit/pileup/meta.yml' is unchanged
 Changes in 'modkit/pileup/main.nf':
 --- modules/nf-core/modkit/pileup/main.nf
 +++ modules/nf-core/modkit/pileup/main.nf
-@@ -9,8 +9,9 @@
+@@ -3,14 +3,16 @@
+     label 'process_high'
+ 
+     conda "${moduleDir}/environment.yml"
+-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+-        'https://depot.galaxyproject.org/singularity/ont-modkit:0.6.1--hcdda2d0_0':
+-        'biocontainers/ont-modkit:0.6.1--hcdda2d0_0' }"
++    // Patched modkit 0.6.4 (nanoporetech/modkit#720) that keeps PacBio reads with 5mC+5hmC > 1 and honours --phased/--modified-bases in the general workers; revert to the biocontainer once released
++    container "${workflow.containerEngine == 'singularity' || workflow.containerEngine == 'apptainer'
++        ? 'oras://ghcr.io/ljwharbers/modkit-sif:0.6.4-pacbiofix-6e0afa2'
++        : 'ghcr.io/ljwharbers/modkit:0.6.4-pacbiofix-6e0afa2'}"
  
      input:
      tuple val(meta), path(bam), path(bai)
@@ -16,8 +27,375 @@ Changes in 'modkit/pileup/main.nf':
      output:
      tuple val(meta), path("*.bed.gz")  , emit: bedgz   , optional: true
 
-'modules/nf-core/modkit/pileup/environment.yml' is unchanged
-'modules/nf-core/modkit/pileup/tests/main.nf.test' is unchanged
-'modules/nf-core/modkit/pileup/tests/main.nf.test.snap' is unchanged
 'modules/nf-core/modkit/pileup/tests/nextflow.config' is unchanged
+'modules/nf-core/modkit/pileup/tests/main.nf.test' is unchanged
+Changes in 'modkit/pileup/tests/main.nf.test.snap':
+--- modules/nf-core/modkit/pileup/tests/main.nf.test.snap
++++ modules/nf-core/modkit/pileup/tests/main.nf.test.snap
+@@ -17,7 +17,7 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
++                        "0.6.4"
+                     ]
+                 ],
+                 "bedgz": [
+@@ -35,7 +35,7 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
++                        "0.6.4"
+                     ]
+                 ]
+             }
+@@ -69,30 +69,30 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
+-                    ]
+-                ],
+-                "bedgz": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bed.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
+-                    ]
+-                ],
+-                "log": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_modkit": [
+-                    [
+-                        "MODKIT_PILEUP",
+-                        "modkit",
+-                        "0.6.1"
++                        "0.6.4"
++                    ]
++                ],
++                "bedgz": [
++                    [
++                        {
++                            "id": "test"
++                        },
++                        "test.bed.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
++                    ]
++                ],
++                "log": [
++                    [
++                        {
++                            "id": "test"
++                        },
++                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
++                    ]
++                ],
++                "versions_modkit": [
++                    [
++                        "MODKIT_PILEUP",
++                        "modkit",
++                        "0.6.4"
+                     ]
+                 ]
+             }
+@@ -125,7 +125,7 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
++                        "0.6.4"
+                     ]
+                 ],
+                 "bedgz": [
+@@ -147,7 +147,7 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
++                        "0.6.4"
+                     ]
+                 ]
+             }
+@@ -181,30 +181,30 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
+-                    ]
+-                ],
+-                "bedgz": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bed.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
+-                    ]
+-                ],
+-                "log": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_modkit": [
+-                    [
+-                        "MODKIT_PILEUP",
+-                        "modkit",
+-                        "0.6.1"
++                        "0.6.4"
++                    ]
++                ],
++                "bedgz": [
++                    [
++                        {
++                            "id": "test"
++                        },
++                        "test.bed.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
++                    ]
++                ],
++                "log": [
++                    [
++                        {
++                            "id": "test"
++                        },
++                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
++                    ]
++                ],
++                "versions_modkit": [
++                    [
++                        "MODKIT_PILEUP",
++                        "modkit",
++                        "0.6.4"
+                     ]
+                 ]
+             }
+@@ -233,7 +233,7 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
++                        "0.6.4"
+                     ]
+                 ],
+                 "bedgz": [
+@@ -251,7 +251,7 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
++                        "0.6.4"
+                     ]
+                 ]
+             }
+@@ -280,7 +280,7 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
++                        "0.6.4"
+                     ]
+                 ],
+                 "bedgz": [
+@@ -298,7 +298,7 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
++                        "0.6.4"
+                     ]
+                 ]
+             }
+@@ -331,7 +331,7 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
++                        "0.6.4"
+                     ]
+                 ],
+                 "bedgz": [
+@@ -353,7 +353,7 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
++                        "0.6.4"
+                     ]
+                 ]
+             }
+@@ -387,30 +387,30 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
+-                    ]
+-                ],
+-                "bedgz": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bed.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
+-                    ]
+-                ],
+-                "log": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_modkit": [
+-                    [
+-                        "MODKIT_PILEUP",
+-                        "modkit",
+-                        "0.6.1"
++                        "0.6.4"
++                    ]
++                ],
++                "bedgz": [
++                    [
++                        {
++                            "id": "test"
++                        },
++                        "test.bed.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
++                    ]
++                ],
++                "log": [
++                    [
++                        {
++                            "id": "test"
++                        },
++                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
++                    ]
++                ],
++                "versions_modkit": [
++                    [
++                        "MODKIT_PILEUP",
++                        "modkit",
++                        "0.6.4"
+                     ]
+                 ]
+             }
+@@ -444,30 +444,30 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
+-                    ]
+-                ],
+-                "bedgz": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bed.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
+-                    ]
+-                ],
+-                "log": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_modkit": [
+-                    [
+-                        "MODKIT_PILEUP",
+-                        "modkit",
+-                        "0.6.1"
++                        "0.6.4"
++                    ]
++                ],
++                "bedgz": [
++                    [
++                        {
++                            "id": "test"
++                        },
++                        "test.bed.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
++                    ]
++                ],
++                "log": [
++                    [
++                        {
++                            "id": "test"
++                        },
++                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
++                    ]
++                ],
++                "versions_modkit": [
++                    [
++                        "MODKIT_PILEUP",
++                        "modkit",
++                        "0.6.4"
+                     ]
+                 ]
+             }
+@@ -501,30 +501,30 @@
+                     [
+                         "MODKIT_PILEUP",
+                         "modkit",
+-                        "0.6.1"
+-                    ]
+-                ],
+-                "bedgz": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bed.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
+-                    ]
+-                ],
+-                "log": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_modkit": [
+-                    [
+-                        "MODKIT_PILEUP",
+-                        "modkit",
+-                        "0.6.1"
++                        "0.6.4"
++                    ]
++                ],
++                "bedgz": [
++                    [
++                        {
++                            "id": "test"
++                        },
++                        "test.bed.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
++                    ]
++                ],
++                "log": [
++                    [
++                        {
++                            "id": "test"
++                        },
++                        "test.log:md5,d41d8cd98f00b204e9800998ecf8427e"
++                    ]
++                ],
++                "versions_modkit": [
++                    [
++                        "MODKIT_PILEUP",
++                        "modkit",
++                        "0.6.4"
+                     ]
+                 ]
+             }
+
 ************************************************************

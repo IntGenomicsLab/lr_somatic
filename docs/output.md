@@ -231,15 +231,20 @@ QC outputs are placed under `tumor/` for all samples, and additionally under `no
 ├── methylation
 │   ├── tumor
 │   │   └── modkit_pileup
-│   │       └── sample.bed.gz
+│   │       ├── sample.bed.gz           # default
+│   │       ├── sample_hp1.bed.gz       # --modkit_phased only
+│   │       ├── sample_hp2.bed.gz       # --modkit_phased only
+│   │       └── sample_combined.bed.gz  # --modkit_phased only
 │   ├── normal                          # paired samples only
 │   │   └── modkit_pileup
-│   │       └── sample.bed.gz
+│   │       └── ...                     # same layout as tumor
 ```
 
-| File                                         | Description                                                                         |
-| -------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `{tumor,normal}/modkit_pileup/sample.bed.gz` | Modkit pileup BED file containing per-CpG methylation frequency and coverage values |
+| File                                                   | Description                                                                                                                                                                               |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `{tumor,normal}/modkit_pileup/sample.bed.gz`           | Modkit pileup bedMethyl table (bgzip) with per-strand methylation frequency and coverage. By default (`--modkit_args '--cpg --modified-bases 5mC'`) rows are 5mC calls at CpG sites only. |
+| `{tumor,normal}/modkit_pileup/sample_{hp1,hp2}.bed.gz` | With `--modkit_phased`: bedMethyl tables restricted to reads carrying haplotype tag `HP:1` or `HP:2` from the Longphase-haplotagged BAM.                                                  |
+| `{tumor,normal}/modkit_pileup/sample_combined.bed.gz`  | With `--modkit_phased`: bedMethyl table over all reads, including untagged ones (equivalent to the unphased default output).                                                              |
 
 </details>
 

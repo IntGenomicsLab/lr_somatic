@@ -539,14 +539,6 @@ workflow LRSOMATIC {
         .set { ch_minimap_bam }
     // ch_minimap_bam: [meta, bam]  -- post-alignment BAM (replicates merged)
 
-    //
-    // MODULE: MODKIT_PILEUP
-    //
-
-    if (!params.skip_modkit) {
-        MODKIT_PILEUP(ch_index_minimap, ch_fasta, ch_fai, [[:],[]])
-    }
-
     ch_index_minimap
         .branch { meta, _bams, _bais ->
                 paired: meta.paired_data
@@ -667,6 +659,17 @@ workflow LRSOMATIC {
         ch_fasta,
         ch_fai
     )
+
+    //
+    // MODULE: MODKIT_PILEUP (haplotagged BAM with --modkit_phased, merged BAM otherwise)
+    //
+    if (!params.skip_modkit) {
+        ch_modkit_input = params.modkit_phased
+            ? PHASING_HAPLOTYPING.out.tumor_normal_hapbams_ch
+            : ch_index_minimap
+        // ch_modkit_input: [meta, bam, bai]  -- BAM to pile up; meta.type selects the publish directory
+        MODKIT_PILEUP(ch_modkit_input, ch_fasta, ch_fai, [[:],[]])
+    }
 
     // Prepare phased VCFs for VEP: add empty 'extra' list required by ENSEMBLVEP_VEP
     PHASING_HAPLOTYPING.out.phased_somatic_vcf
