@@ -178,8 +178,8 @@ QC outputs are placed under `tumor/` for all samples, and additionally under `no
 │   │   ├── fibertoolsrs
 │   │   │   ├── sample_qc.txt
 │   │   ├── mosdepth
-│   │   │   ├── sample.mosdepth.global.dist.txt
-│   │   │   ├── sample.mosdepth.summary.txt
+│   │   │   ├── sample_tumor.mosdepth.global.dist.txt
+│   │   │   ├── sample_tumor.mosdepth.summary.txt
 │   │   ├── nanoplot_aln
 │   │   │   ├── sample_tumor_aln_NanoStats.txt
 │   │   │   ├── sample_tumor_aln_NanoPlot-report.html
@@ -187,9 +187,9 @@ QC outputs are placed under `tumor/` for all samples, and additionally under `no
 │   │   │   ├── sample_tumor_rep1_ubam_NanoStats.txt
 │   │   │   ├── sample_tumor_rep1_ubam_NanoPlot-report.html
 │   │   ├── samtools
-│   │   │   ├── sample.flagstat
-│   │   │   ├── sample.idxstats
-│   │   │   ├── sample.stats
+│   │   │   ├── sample_tumor.flagstat
+│   │   │   ├── sample_tumor.idxstats
+│   │   │   ├── sample_tumor.stats
 │   ├── normal                          # paired samples only
 │   │   └── [same subdirectories as tumor]
 │   ├── whatshap_stats
@@ -202,15 +202,15 @@ QC outputs are placed under `tumor/` for all samples, and additionally under `no
 | `cramino_aln/sample_{type}_cramino.txt`                           | cramino QC summary statistics for the aligned bam file                                                                   |
 | `cramino_ubam_rep1/sample_{type}_cramino.txt`                     | cramino QC summary statistics for the unaligned bam files                                                                |
 | `fibertoolsrs/sample_qc.txt`                                      | fibertools QC summary for the bam file                                                                                   |
-| `mosdepth/sample.mosdepth.global.dist.txt`                        | a cumulative distribution indicating the proportion of total bases that were covered for at least a given coverage value |
-| `mosdepth/sample.mosdepth.summary.txt`                            | overall summary file from mosdepth tool                                                                                  |
+| `mosdepth/sample_{type}.mosdepth.global.dist.txt`                 | a cumulative distribution indicating the proportion of total bases that were covered for at least a given coverage value |
+| `mosdepth/sample_{type}.mosdepth.summary.txt`                     | overall summary file from mosdepth tool                                                                                  |
 | `nanoplot_aln/sample_{type}_aln_NanoStats.txt`                    | NanoPlot summary statistics for the aligned BAM file                                                                     |
 | `nanoplot_aln/sample_{type}_aln_NanoPlot-report.html`             | NanoPlot interactive HTML report for the aligned BAM file                                                                |
 | `nanoplot_ubam_rep1/sample_{type}_rep1_ubam_NanoStats.txt`        | NanoPlot summary statistics for the unaligned BAM file                                                                   |
 | `nanoplot_ubam_rep1/sample_{type}_rep1_ubam_NanoPlot-report.html` | NanoPlot interactive HTML report for the unaligned BAM file                                                              |
-| `samtools/sample.flagstat`                                        | a summary of the counts of different samtools flags                                                                      |
-| `samtools/sample.idxstats`                                        | a summary of the number of mapped and unmapped reads                                                                     |
-| `samtools/sample.stats`                                           | summary statistics from the bamfile                                                                                      |
+| `samtools/sample_{type}.flagstat`                                 | a summary of the counts of different samtools flags                                                                      |
+| `samtools/sample_{type}.idxstats`                                 | a summary of the number of mapped and unmapped reads                                                                     |
+| `samtools/sample_{type}.stats`                                    | summary statistics from the bamfile                                                                                      |
 | `whatshap_stats/sample.stats.tsv`                                 | WhatsHap phasing statistics per chromosome including phase block N50 and switch error rates                              |
 | `whatshap_stats/sample.blocklist.tsv`                             | list of all phase blocks with their genomic coordinates                                                                  |
 
@@ -551,6 +551,8 @@ Filtering in the browser:
 The report is one self-contained file — plots and tables are embedded, so it can be copied or emailed on its own.
 
 ### `multiqc`
+
+Sample rows are named per BAM: `{sample}_tumor` and `{sample}_normal` carry the samtools, mosdepth and post-alignment NanoPlot statistics of that BAM, `{sample}_{type}_rep{N}_ubam` rows carry the pre-alignment NanoPlot statistics of each unaligned replicate, and WhatsHap phasing statistics sit on a plain `{sample}` row because phasing is done once per sample.
 
 <details markdown="1">
 <summary>Output files</summary>

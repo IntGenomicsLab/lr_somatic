@@ -10,4 +10,9 @@ report_section_order:
 
 export_plots: true
 
+# Post-alignment NanoPlot files are named <sample>_<type>_aln_NanoStats.txt. Dropping "_aln"
+# puts their NanoStat row on the same <sample>_<type> row as samtools and mosdepth for that BAM.
+extra_fn_clean_exts:
+  - "_aln"
+
 disable_version_detection: true
