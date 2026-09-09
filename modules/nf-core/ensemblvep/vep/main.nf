@@ -40,8 +40,12 @@ process ENSEMBLVEP_VEP {
     def dir_cache = cache ? "\${PWD}/${cache}" : "/.vep"
     def reference = fasta ? "--fasta ${fasta}" : ""
     def create_index = file_extension == "vcf" ? "tabix ${args2} ${prefix}.${file_extension}.gz" : ""
-    args = args.replaceAll(/--custom file=[^,]+/, "--custom file=${custom_vep}")
-    
+    // Only the first --custom entry is rewritten, so further --custom tracks added through
+    // ext.args keep their own staged filenames
+    if (custom_vep) {
+        args = args.replaceFirst(/--custom file=[^,\s]+/, "--custom file=${custom_vep}")
+    }
+
     """
     vep \\
         -i ${vcf} \\

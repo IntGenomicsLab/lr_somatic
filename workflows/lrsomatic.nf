@@ -11,6 +11,8 @@ include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_lrso
 include { getGenomeAttribute     } from '../subworkflows/local/utils_nfcore_lrsomatic_pipeline'
 include { reportGenePanelTokens  } from '../subworkflows/local/utils_nfcore_lrsomatic_pipeline'
 include { reportGenePanelIsFile  } from '../subworkflows/local/utils_nfcore_lrsomatic_pipeline'
+include { resolveVepPlugins; validateVepPluginParams } from '../subworkflows/local/utils_nfcore_lrsomatic_pipeline'
+include { PREPARE_VEP_PLUGINS    } from '../subworkflows/local/prepare_vep_plugins'
 
 //
 // IMPORT MODULES
@@ -106,6 +108,13 @@ workflow LRSOMATIC {
     params.vep_species = getGenomeAttribute('vep_species')
     params.sigprofiler_genome = getGenomeAttribute('sigprofiler_genome')
     params.sigprofiler_genome_url = getGenomeAttribute('sigprofiler_genome_url')
+
+    // vep_plugin_args is read back by conf/modules.config
+    validateVepPluginParams()
+    params.vep_plugin_args = resolveVepPlugins().args
+
+    vep_custom = params.vep_custom != null ? file(params.vep_custom) : []
+    vep_custom_tbi = params.vep_custom_tbi != null ? file(params.vep_custom_tbi) : []
 
     // Convert comma-separated caller strings to lists for internal use
     params.germline_var_keep = params.germline_var_keep instanceof List
@@ -720,22 +729,22 @@ workflow LRSOMATIC {
     if (!params.skip_vep) {
 
         //
+        // SUBWORKFLOW: PREPARE_VEP_PLUGINS
+        // Input:  none -- reads the resolved --vep_* configuration itself
+        // Output: .extra_files -- plugin .pm and data files to stage, empty when none are configured
+        //
+        PREPARE_VEP_PLUGINS ()
+
+        ch_vep_extra_files = PREPARE_VEP_PLUGINS.out.extra_files
+        ch_versions = ch_versions.mix(PREPARE_VEP_PLUGINS.out.versions)
+
+        //
         // MODULE: GERMLINE_VEP (ENSEMBLVEP_VEP alias; label: process_medium)
         // Input:  germline_vep -- [meta, vcf, []]  -- phased germline VCF
         //         vep_cache    -- [[:], cache_dir]
         //         ch_fasta     -- [[:], fasta]
         // Output: annotated germline VCF with consequence predictions
         //
-        if (params.vep_custom != null) {
-            vep_custom = file(params.vep_custom)
-        } else {
-            vep_custom = []
-        }
-        if (params.vep_custom_tbi != null) {
-            vep_custom_tbi = file(params.vep_custom_tbi)
-        } else {
-            vep_custom_tbi = []
-        }
         GERMLINE_VEP (
             germline_vep,
             params.vep_genome,
@@ -743,7 +752,7 @@ workflow LRSOMATIC {
             params.vep_cache_version,
             vep_cache,
             ch_fasta,
-            [],
+            ch_vep_extra_files,
             vep_custom,
             vep_custom_tbi
         )
@@ -763,7 +772,7 @@ workflow LRSOMATIC {
             params.vep_cache_version,
             vep_cache,
             ch_fasta,
-            [],
+            ch_vep_extra_files,
             vep_custom,
             vep_custom_tbi
         )
@@ -890,6 +899,7 @@ workflow LRSOMATIC {
         // MODULE: SV_VEP (ENSEMBLVEP_VEP alias; label: process_medium)
         // Input:  sv_vep -- [meta, vcf, []]  -- SEVERUS SV VCF
         // Output: annotated SV VCF with consequence predictions
+        // No plugin files: missense and splice scores are meaningless on SEVERUS breakends
         //
         SV_VEP (
             sv_vep,

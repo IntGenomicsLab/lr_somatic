@@ -14,6 +14,10 @@
 
 ## Pipeline tools
 
+- [AlphaMissense](https://doi.org/10.1126/science.adg7492)
+
+  > Cheng J, Novati G, Pan J, Bycroft C, Žemgulytė A, Applebaum T, Pritzel A, Wong LH, Zielinski M, Sargeant T, Schneider RG, Senior AW, Jumper J, Hassabis D, Kohli P, Avsec Ž. Accurate proteome-wide missense variant effect prediction with AlphaMissense. Science. 2023 Sep 22;381(6664):eadg7492. doi: 10.1126/science.adg7492.
+
 - [ASCAT](https://pubmed.ncbi.nlm.nih.gov/20837533/)
 
   > Van Loo P, Nordgard SH, Lingjærde OC, Russnes HG, Rye IH, Sun W, Weigman VJ, Marynen P, Zetterberg A, Naume B, Perou CM, Børresen-Dale AL, Kristensen VN. Allele-specific copy number analysis of tumors. Proc Natl Acad Sci U S A. 2010 Sep 28;107(39):16910-5. doi: 10.1073/pnas.1009843107. Epub 2010 Sep 13. PubMed PMID: 20837533; PubMed Central PMCID: PMC2947907.
@@ -21,6 +25,10 @@
 - [bcftools](https://pubmed.ncbi.nlm.nih.gov/33590861/)
 
   > Danecek P, Bonfield JK, Liddle J, Marshall J, Ohan V, Pollard MO, Whitwham A, Keane T, McCarthy SA, Davies RM, Li H. Twelve years of SAMtools and BCFtools. Gigascience. 2021 Feb 16;10(2):giab008. doi: 10.1093/gigascience/giab008. PMID: 33590861; PMCID: PMC7931819.
+
+- [CADD](https://doi.org/10.1093/nar/gkad989)
+
+  > Schubach M, Maass T, Nazaretyan L, Röner S, Kircher M. CADD v1.7: using protein language models, regulatory CNNs and other nucleotide-level scores to improve genome-wide variant predictions. Nucleic Acids Res. 2024 Jan 5;52(D1):D1143-D1154. doi: 10.1093/nar/gkad989.
 
 - [Clair3](https://www.nature.com/articles/s43588-022-00387-x)
 
@@ -34,6 +42,10 @@
 
   > Chen L, Zheng Z, Su J, Yu X, Wong AOK, Zhang J, Lee YL, Luo R. ClairS-TO: a deep-learning method for long-read tumor-only somatic small variant calling. Nat Commun. 2025 Oct 31;16(1):9630. doi: 10.1038/s41467-025-64547-z. PMID: 41173866; PMCID: PMC12579226.
 
+- [ClinVar](https://doi.org/10.1093/nar/gkx1153)
+
+  > Landrum MJ, Lee JM, Benson M, Brown GR, Chao C, Chitipiralla S, Gu B, Hart J, Hoffman D, Jang W, Karapetyan K, Katz K, Liu C, Maddipatla Z, Malheiro A, McDaniel K, Ovetsky M, Riley G, Zhou G, Holmes JB, Kattman BL, Maglott DR. ClinVar: improving access to variant interpretations and supporting evidence. Nucleic Acids Res. 2018 Jan 4;46(D1):D1062-D1067. doi: 10.1093/nar/gkx1153.
+
 - [cramino](https://github.com/wdecoster/cramino)
 
   > De Coster W. cramino: A fast and simple tool for quality control of long read sequencing data [Software]. GitHub. https://github.com/wdecoster/cramino
@@ -41,6 +53,10 @@
 - [Ensembl VEP](https://pubmed.ncbi.nlm.nih.gov/27268795/)
 
   > McLaren W, Gil L, Hunt SE, Riat HS, Ritchie GR, Thormann A, Flicek P, Cunningham F. The Ensembl Variant Effect Predictor. Genome Biol. 2016 Jun 6;17(1):122. doi: 10.1186/s13059-016-0974-4. PubMed PMID: 27268795; PubMed Central PMCID: PMC4893825.
+
+- [EVE](https://doi.org/10.1038/s41586-021-04043-8)
+
+  > Frazer J, Notin P, Dias M, Gomez A, Min JK, Brock K, Gal Y, Marks DS. Disease variant prediction with deep generative models of evolutionary data. Nature. 2021 Nov;599(7883):91-95. doi: 10.1038/s41586-021-04043-8.
 
 - [fibertools-rs](https://doi.org/10.1101/gr.279095.124)
 
@@ -70,6 +86,14 @@
 
   > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
 
+- [PolyPhen-2](https://doi.org/10.1038/nmeth0410-248)
+
+  > Adzhubei IA, Schmidt S, Peshkin L, Ramensky VE, Gerasimova A, Bork P, Kondrashov AS, Sunyaev SR. A method and server for predicting damaging missense mutations. Nat Methods. 2010 Apr;7(4):248-9. doi: 10.1038/nmeth0410-248.
+
+- [REVEL](https://doi.org/10.1016/j.ajhg.2016.08.016)
+
+  > Ioannidis NM, Rothstein JH, Pejaver V, Middha S, McDonnell SK, Baheti S, Musolf A, Li Q, Holzinger E, Karyadi D, Cannon-Albright LA, Teerlink CC, Stanford JL, Isaacs WB, Xu J, Cooney KA, Lange EM, Schleutker J, Carpten JD, Powell IJ, Cussenot O, Cancel-Tassin G, Giles GG, MacInnis RJ, Maier C, Hsieh CL, Wiklund F, Catalona WJ, Foulkes WD, Mandal D, Eeles RA, Kote-Jarai Z, Bustamante CD, Schaid DJ, Hastie T, Ostrander EA, Bailey-Wilson JE, Radivojac P, Thibodeau SN, Whittemore AS, Sieh W. REVEL: An Ensemble Method for Predicting the Pathogenicity of Rare Missense Variants. Am J Hum Genet. 2016 Oct 6;99(4):877-885. doi: 10.1016/j.ajhg.2016.08.016.
+
 - [SAMtools](https://pubmed.ncbi.nlm.nih.gov/19505943/)
 
   > Li H, Handsaker B, Wysoker A, Fennell T, Ruan J, Homer N, Marth G, Abecasis G, Durbin R; 1000 Genome Project Data Processing Subgroup. The Sequence Alignment/Map format and SAMtools. Bioinformatics. 2009 Aug 15;25(16):2078-9. doi: 10.1093/bioinformatics/btp352. Epub 2009 Jun 8. PubMed PMID: 19505943; PubMed Central PMCID: PMC2723002.
@@ -77,6 +101,10 @@
 - [Severus](https://www.nature.com/articles/s41587-025-02618-8)
 
   > Keskus, A.G., Bryant, A., Ahmad, T. et al. Severus detects somatic structural variation and complex rearrangements in cancer genomes using long-read sequencing. Nat Biotechnol (2025). https://doi.org/10.1038/s41587-025-02618-8
+
+- [SIFT](https://doi.org/10.1093/nar/gkg509)
+
+  > Ng PC, Henikoff S. SIFT: Predicting amino acid changes that affect protein function. Nucleic Acids Res. 2003 Jul 1;31(13):3812-4. doi: 10.1093/nar/gkg509.
 
 - [SigProfilerAssignment](https://pubmed.ncbi.nlm.nih.gov/38096571/)
 
@@ -113,6 +141,34 @@
   > Kurtzer GM, Sochat V, Bauer MW. Singularity: Scientific containers for mobility of compute. PLoS One. 2017 May 11;12(5):e0177459. doi: 10.1371/journal.pone.0177459. eCollection 2017. PubMed PMID: 28494014; PubMed Central PMCID: PMC5426675.
 
 ## Resources
+
+- [AlphaMissense Database](https://console.cloud.google.com/storage/browser/dm_alphamissense)
+
+  VEP plugin data, fetched by default via `--vep_alphamissense` (GRCh38) or
+  `--vep_alphamissense_aa` (CHM13). AlphaMissense Database, Copyright (2023) DeepMind Technologies
+  Limited, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/legalcode). Provided for
+  theoretical modelling only, and not a substitute for professional medical advice, diagnosis or
+  treatment.
+
+  On GRCh38 the score file comes from the bucket unchanged, with a tabix index we host because the
+  release ships without one. On CHM13 the pipeline distributes **an adaptation** of this data: the
+  protein-space release re-keyed from UniProt accession to gene symbol using the UniProt ID mapping,
+  split into reference/position/alternate amino-acid columns, deduplicated where several accessions
+  share a symbol, and tabix-indexed. Rows whose accession has no gene symbol are dropped. **No score
+  is altered.** CC BY 4.0 permits this adaptation and its redistribution with attribution and, as
+  given here, an indication of the changes made.
+
+- [Ensembl pangenome PolyPhen/SIFT database](https://ftp.ensembl.org/pub/current_variation/pangenomes/Human/)
+
+  VEP plugin data for the `PolyPhen_SIFT` plugin, fetched by default on `--genome CHM13` via
+  `--vep_polyphen_sift_db`. This is how SIFT and PolyPhen predictions reach T2T-CHM13, since the
+  lookup is keyed on the MD5 of the peptide sequence rather than on genome coordinates.
+
+- [UniProt ID mapping](https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/)
+
+  The source of the gene symbols in the protein-space AlphaMissense table above. Not fetched at
+  runtime: it is an input to the table the pipeline distributes. UniProtKB is licensed
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 - [ASAP Panel of Normals](https://www.biorxiv.org/content/10.64898/2026.03.15.711881v1)
 

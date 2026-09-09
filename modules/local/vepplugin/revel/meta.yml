@@ -1,0 +1,61 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "vepplugin_revel"
+description: Reshape the REVEL release into the tab-separated, GRCh38-sorted form the VEP REVEL plugin expects
+keywords:
+  - vep
+  - revel
+  - tabix
+  - annotation
+  - pathogenicity
+tools:
+  - "htslib":
+      description: "C library for high-throughput sequencing data formats"
+      homepage: "http://www.htslib.org/"
+      documentation: "http://www.htslib.org/doc/tabix.html"
+      tool_dev_url: "https://github.com/samtools/htslib"
+      doi: "10.1093/gigascience/giab007"
+      licence: ["MIT"]
+      identifier: biotools:htslib
+
+input:
+  - - revel_dir:
+        type: directory
+        description: |
+          The unpacked REVEL release. It holds one comma-separated table
+          carrying both GRCh37 and GRCh38 positions, sorted on the GRCh37
+          column, so it has to be re-sorted and re-indexed for GRCh38.
+
+output:
+  files:
+    - "revel_grch38.tsv.gz{,.tbi}":
+        type: file
+        description: GRCh38-sorted REVEL score file and its tabix index
+        pattern: "revel_grch38.tsv.gz{,.tbi}"
+  versions_tabix:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - tabix:
+          type: string
+          description: The tool name
+      - "tabix -h 2>&1 | grep -oP 'Version:\\s*\\K[^\\s]+'":
+          type: string
+          description: The command used to generate the version of the tool
+
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - tabix:
+          type: string
+          description: The tool name
+      - "tabix -h 2>&1 | grep -oP 'Version:\\s*\\K[^\\s]+'":
+          type: string
+          description: The command used to generate the version of the tool
+
+authors:
+  - "@AmberVerhasselt"
+maintainers:
+  - "@AmberVerhasselt"

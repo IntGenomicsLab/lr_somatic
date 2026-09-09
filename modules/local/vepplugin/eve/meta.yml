@@ -1,0 +1,60 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "vepplugin_eve"
+description: Merge EVE's per-protein VCFs into the single indexed VCF the VEP EVE plugin expects
+keywords:
+  - vep
+  - eve
+  - tabix
+  - annotation
+  - pathogenicity
+tools:
+  - "htslib":
+      description: "C library for high-throughput sequencing data formats"
+      homepage: "http://www.htslib.org/"
+      documentation: "http://www.htslib.org/doc/tabix.html"
+      tool_dev_url: "https://github.com/samtools/htslib"
+      doi: "10.1093/gigascience/giab007"
+      licence: ["MIT"]
+      identifier: biotools:htslib
+
+input:
+  - - eve_dir:
+        type: directory
+        description: |
+          The unpacked EVE bulk release: one VCF per protein, nested under
+          vcf_files_missense_mutations.
+
+output:
+  files:
+    - "eve_merged.vcf.gz{,.tbi}":
+        type: file
+        description: Single merged, sorted EVE VCF and its tabix index
+        pattern: "eve_merged.vcf.gz{,.tbi}"
+  versions_tabix:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - tabix:
+          type: string
+          description: The tool name
+      - "tabix -h 2>&1 | grep -oP 'Version:\\s*\\K[^\\s]+'":
+          type: string
+          description: The command used to generate the version of the tool
+
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - tabix:
+          type: string
+          description: The tool name
+      - "tabix -h 2>&1 | grep -oP 'Version:\\s*\\K[^\\s]+'":
+          type: string
+          description: The command used to generate the version of the tool
+
+authors:
+  - "@AmberVerhasselt"
+maintainers:
+  - "@AmberVerhasselt"

@@ -214,6 +214,102 @@
                 },
                 "vep_custom_tbi": {
                     "type": "string"
+                },
+                "vep_alphamissense": {
+                    "type": "string",
+                    "description": "Path or URL to the AlphaMissense GRCh38 score file for the AlphaMissense plugin.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Defaults to AlphaMissense_hg38.tsv.gz (613 MB) from https://storage.googleapis.com/dm_alphamissense on --genome GRCh38, fetched with an index we host since the release ships without a .tbi. Supply this together with --vep_alphamissense_tbi to use a local copy instead. GRCh38 only; on CHM13 the route is --vep_alphamissense_aa. Licensed CC BY 4.0."
+                },
+                "vep_alphamissense_tbi": {
+                    "type": "string",
+                    "description": "Path or URL to the index for --vep_alphamissense.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Required whenever --vep_alphamissense is set. Overriding the score file drops the default index, which was built from different content."
+                },
+                "vep_alphamissense_aa": {
+                    "type": "string",
+                    "description": "Path or URL to a protein-space AlphaMissense table for the AlphaMissenseProtein plugin (CHM13).",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Defaults on --genome CHM13 to a table we host (1.1 GB, indexed), built from the AlphaMissense protein-space release by re-keying UniProt accessions onto gene symbols -- see CITATIONS.md. Keyed on gene symbol and amino-acid substitution, so it is assembly-independent, which is what makes AlphaMissense reachable on CHM13. Supply this with --vep_alphamissense_aa_tbi to use a table of your own."
+                },
+                "vep_alphamissense_aa_tbi": {
+                    "type": "string",
+                    "description": "Path or URL to the index for --vep_alphamissense_aa.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Required whenever --vep_alphamissense_aa is set. Overriding the table drops the default index, which was built from different content."
+                },
+                "vep_polyphen_sift_db": {
+                    "type": "string",
+                    "description": "Path or URL to the Ensembl pangenome PolyPhen/SIFT SQLite database for the PolyPhen_SIFT plugin (CHM13).",
+                    "fa_icon": "fas fa-database",
+                    "help_text": "Defaults to homo_sapiens_pangenome_PolyPhen_SIFT_20240502.db (13 GB) from https://ftp.ensembl.org/pub/current_variation/pangenomes/Human/ on --genome CHM13. Keyed on the MD5 of the peptide sequence, which is why it works on CHM13. On GRCh38 SIFT and PolyPhen come from the VEP cache instead and this is unused. Worth pointing at a local copy: it is large and needs no preparation."
+                },
+                "vep_clinvar": {
+                    "type": "string",
+                    "description": "Path or URL to a ClinVar VCF, added as a VEP --custom annotation.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Defaults to the NCBI GRCh38 VCF on --genome GRCh38 and the CHM13-lifted Ensembl VCF on --genome CHM13, both with their published .tbi. Check that contig naming matches your reference: NCBI names contigs 1, 2, 3 while the GATK GRCh38 reference uses chr1, chr2, chr3, and a mismatch produces empty annotation rather than an error."
+                },
+                "vep_clinvar_tbi": {
+                    "type": "string",
+                    "description": "Path or URL to the index for --vep_clinvar.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Required whenever --vep_clinvar is set: ClinVar publishes a .tbi alongside every VCF, so the pipeline does not build one."
+                },
+                "vep_clinvar_fields": {
+                    "type": "string",
+                    "description": "Comma-separated ClinVar INFO fields to carry into the annotation.",
+                    "fa_icon": "fas fa-list",
+                    "default": "CLNSIG,CLNREVSTAT,CLNDN"
+                },
+                "vep_cadd_snv": {
+                    "type": "string",
+                    "description": "Path or URL to the CADD SNV score file for the CADD plugin.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Defaults to whole_genome_SNVs.tsv.gz from https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/ on --genome GRCh38, with its published .tbi. At 81 GB this is by far the largest download a default run makes, and nothing is published to the output directory, so point this at a local copy once you have one. GRCh38 only: CADD scores non-coding positions and so has no protein-space form usable on CHM13. Free for non-commercial use only."
+                },
+                "vep_cadd_snv_tbi": {
+                    "type": "string",
+                    "description": "Path or URL to the index for --vep_cadd_snv.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Required whenever --vep_cadd_snv is set: CADD publishes a .tbi alongside every score file."
+                },
+                "vep_cadd_indel": {
+                    "type": "string",
+                    "description": "Path or URL to the CADD indel score file for the CADD plugin.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Defaults to gnomad.genomes.r4.0.indel.tsv.gz (1.2 GB, .tbi published) from the same CADD release directory on --genome GRCh38. Free for non-commercial use only."
+                },
+                "vep_cadd_indel_tbi": {
+                    "type": "string",
+                    "description": "Path or URL to the index for --vep_cadd_indel.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Required whenever --vep_cadd_indel is set: CADD publishes a .tbi alongside every score file."
+                },
+                "vep_revel": {
+                    "type": "string",
+                    "description": "Path or URL to the REVEL release zip, or to a prepared score file, for the REVEL plugin.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Defaults to revel-v1.3_all_chromosomes.zip from https://rothsj06.dmz.hpc.mssm.edu on --genome GRCh38, which the pipeline downloads (667 MB), reshapes and re-indexes on the GRCh38 column -- the release ships comma-separated and sorted on its GRCh37 column. Pass a .zip to have it prepared, or a prepared .tsv.gz together with --vep_revel_tbi to use it directly. GRCh38 only. Free for non-commercial use only."
+                },
+                "vep_revel_tbi": {
+                    "type": "string",
+                    "description": "Path or URL to the index for --vep_revel.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Required when --vep_revel points at an already-prepared score file, and unused when it points at the release zip."
+                },
+                "vep_eve": {
+                    "type": "string",
+                    "description": "Path or URL to the EVE release zip, or to a merged EVE VCF, for the EVE plugin.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Off by default, unlike the other GRCh38 resources: the release is a 9.6 GB zip of per-protein VCFs from https://evemodel.org/api/proteins/bulk/download/ that then has to be merged, so it is enabled only by setting this explicitly. Pass the .zip to have it prepared, or a merged .vcf.gz together with --vep_eve_tbi to use it directly. GRCh38 only. Free for non-commercial use only."
+                },
+                "vep_eve_tbi": {
+                    "type": "string",
+                    "description": "Path or URL to the index for --vep_eve.",
+                    "fa_icon": "fas fa-file",
+                    "help_text": "Required when --vep_eve points at an already-merged VCF, and unused when it points at the release zip."
                 }
             }
         },
@@ -406,6 +502,11 @@
                 "skip_vep": {
                     "type": "boolean",
                     "description": "Skip VEP annotation"
+                },
+                "skip_vep_plugins": {
+                    "type": "boolean",
+                    "description": "Skip the VEP plugin annotation, keeping the rest of VEP",
+                    "help_text": "The plugin data files are enabled by default on --genome GRCh38 and --genome CHM13, which means a first run downloads tens of GB. Set this to annotate with VEP alone. --igenomes_ignore and a non-human --genome also leave the plugins off, since neither resolves any plugin default."
                 },
                 "skip_normalfiber": {
                     "type": "boolean",
