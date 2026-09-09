@@ -55,7 +55,9 @@ workflow PREPARE_REFERENCE_FILES {
             // the wrong name: .unique() kept both, UNTAR extracted two different models into
             // directories with the same name, and the by-name combine in PAIRED_SMALLVAR_GERMLINE
             // ran Clair3 twice per normal BAM (once with the wrong model), with the downstream join
-            // taking whichever finished first.
+            // taking whichever finished first. The same divergence also broke the opposite case: a
+            // basecall model absent from clair3_modelMap made the header-derived name null, so UNTAR
+            // failed with "mkdir: missing operand" even though the explicit override downloaded fine.
             def meta_new = [id: model]
             def download_prefix = ( basecall_model_meta == 'hifi_revio' ? "https://www.bio8.cs.hku.hk/clair3/clair3_models/" : "https://cdn.oxfordnanoportal.com/software/analysis/models/clair3" )
             def url = "${download_prefix}/${model}.tar.gz"
