@@ -270,12 +270,14 @@ workflow LRSOMATIC {
         if (!params.skip_nanoplot) {
 
             //
-            // MODULE: NANOPLOT_PRE (label: process_medium)
+            // MODULE: NANOPLOT_PRE (label: process_low)
             // Input:  CRAMINO_PRE.out.arrow -- [meta, arrow_file]
             // Output: nanoplot HTML/txt reports
             //
 
             NANOPLOT_PRE(CRAMINO_PRE.out.arrow)
+
+            ch_nanoplot_pre_txt = NANOPLOT_PRE.out.txt
 
         }
 
@@ -926,12 +928,14 @@ workflow LRSOMATIC {
         if (!params.skip_nanoplot) {
 
             //
-            // MODULE: NANOPLOT_POST (label: process_medium)
+            // MODULE: NANOPLOT_POST (label: process_low)
             // Input:  CRAMINO_POST.out.arrow -- [meta, arrow_file]
             // Output: HTML/txt QC reports (post-alignment)
             //
 
             NANOPLOT_POST(CRAMINO_POST.out.arrow)
+
+            ch_nanoplot_post_txt = NANOPLOT_POST.out.txt
 
         }
 
